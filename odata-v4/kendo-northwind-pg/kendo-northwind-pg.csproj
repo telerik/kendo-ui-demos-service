@@ -245,6 +245,7 @@
     <Content Include="Models\Northwind.edmx.diagram">
       <DependentUpon>Northwind.edmx</DependentUpon>
     </Content>
+    <None Include="Properties\PublishProfiles\production.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
