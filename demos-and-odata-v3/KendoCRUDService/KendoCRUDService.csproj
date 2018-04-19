@@ -206,6 +206,7 @@
     <Compile Include="Models\Scheduler\SchedulerEvent.cs" />
     <Compile Include="Models\Scheduler\TasksRepository.cs" />
     <Compile Include="Models\Scheduler\TaskViewModel.cs" />
+    <Compile Include="Models\SpreadsheetSubmitViewModel.cs" />
     <Compile Include="Models\StockData\BaseUnit.cs" />
     <Compile Include="Models\StockData\DataFilter.cs" />
     <Compile Include="Models\StockData\StockDataPoint.cs" />
