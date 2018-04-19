@@ -51,9 +51,31 @@ namespace KendoCRUDService.Controllers
         {
             IEnumerable<ProductModel> result = ProductRepository.All().OrderByDescending(p => p.ProductID);
             
-            result = result.Skip(skip).Take(take);            
+            result = result.Skip(skip).Take(take);
 
             return this.Jsonp(result);
+        }
+
+        public JsonResult Submit()
+        {
+            var model = this.DeserializeObject<SpreadsheetSubmitViewModel>("models");
+
+            if (model.Created != null)
+            {
+                ProductRepository.Insert(model.Created);
+            }
+
+            if (model.Updated != null)
+            {
+                ProductRepository.Update(model.Updated);
+            }
+
+            if (model.Destroyed != null)
+            {
+                ProductRepository.Delete(model.Destroyed);
+            }
+
+            return this.Jsonp(model);
         }
     }
 }
