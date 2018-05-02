@@ -187,12 +187,12 @@
         </Association>
         <Association Name="FK_Employees_Employees">
           <End Role="Employees" Type="Self.Employees" Multiplicity="0..1" />
-          <End Role="Employees1" Type="Self.Employees" Multiplicity="*" />
+          <End Role="Subordinates" Type="Self.Employees" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Employees">
               <PropertyRef Name="EmployeeID" />
             </Principal>
-            <Dependent Role="Employees1">
+            <Dependent Role="Subordinates">
               <PropertyRef Name="ReportsTo" />
             </Dependent>
           </ReferentialConstraint>
@@ -341,7 +341,7 @@
           </AssociationSet>
           <AssociationSet Name="FK_Employees_Employees" Association="Self.FK_Employees_Employees">
             <End Role="Employees" EntitySet="Employees" />
-            <End Role="Employees1" EntitySet="Employees" />
+            <End Role="Subordinates" EntitySet="Employees" />
           </AssociationSet>
           <AssociationSet Name="FK_EmployeeTerritories_Employees" Association="Self.FK_EmployeeTerritories_Employees">
             <End Role="Employees" EntitySet="Employees" />
@@ -447,8 +447,8 @@
           <Property Name="Notes" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
           <Property Name="ReportsTo" Type="Int32" />
           <Property Name="PhotoPath" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="Employees1" Relationship="Self.FK_Employees_Employees" FromRole="Employees" ToRole="Employees1" />
-          <NavigationProperty Name="Employee1" Relationship="Self.FK_Employees_Employees" FromRole="Employees1" ToRole="Employees" />
+          <NavigationProperty Name="Subordinates" Relationship="Self.FK_Employees_Employees" FromRole="Employees" ToRole="Subordinates" />
+          <NavigationProperty Name="Employee1" Relationship="Self.FK_Employees_Employees" FromRole="Subordinates" ToRole="Employees" />
           <NavigationProperty Name="Orders" Relationship="Self.FK_Orders_Employees" FromRole="Employees" ToRole="Orders" />
           <NavigationProperty Name="Territories" Relationship="Self.EmployeeTerritories" FromRole="Employees" ToRole="Territories" />
         </EntityType>
@@ -577,12 +577,12 @@
         </Association>
         <Association Name="FK_Employees_Employees">
           <End Role="Employees" Type="Self.Employee" Multiplicity="0..1" />
-          <End Role="Employees1" Type="Self.Employee" Multiplicity="*" />
+          <End Role="Subordinates" Type="Self.Employee" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Employees">
               <PropertyRef Name="EmployeeID" />
             </Principal>
-            <Dependent Role="Employees1">
+            <Dependent Role="Subordinates">
               <PropertyRef Name="ReportsTo" />
             </Dependent>
           </ReferentialConstraint>
@@ -689,7 +689,7 @@
           </AssociationSet>
           <AssociationSet Name="FK_Employees_Employees" Association="Self.FK_Employees_Employees">
             <End Role="Employees" EntitySet="Employees" />
-            <End Role="Employees1" EntitySet="Employees" />
+            <End Role="Subordinates" EntitySet="Employees" />
           </AssociationSet>
           <AssociationSet Name="FK_Orders_Employees" Association="Self.FK_Orders_Employees">
             <End Role="Employees" EntitySet="Employees" />

@@ -152,11 +152,11 @@ namespace kendo_northwind_pg.Controllers
             return StatusCode(HttpStatusCode.NoContent);
         }
 
-        // GET: odata/Employees(5)/Employees1
+        // GET: odata/Employees(5)/Subordinates
         [EnableQuery]
-        public IQueryable<Employee> GetEmployees1([FromODataUri] int key)
+        public IQueryable<Employee> GetSubordinates([FromODataUri] int key)
         {
-            var employees = db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.Employees1);
+            var employees = db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.Subordinates);
             foreach (var employee in employees)
             {
                 employee.hasChildren = db.Employees.Where(s => s.ReportsTo == employee.EmployeeID).Count() > 0;
