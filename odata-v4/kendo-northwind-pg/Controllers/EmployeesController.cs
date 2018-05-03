@@ -11,6 +11,7 @@ using System.Web.ModelBinding;
 using Microsoft.AspNet.OData;
 using kendo_northwind_pg.Models;
 using System.Web.Http.Cors;
+using Microsoft.AspNet.OData.Routing;
 
 namespace kendo_northwind_pg.Controllers
 {
@@ -36,6 +37,13 @@ namespace kendo_northwind_pg.Controllers
         public IQueryable<Employee> GetEmployees()
         {
             return db.Employees;
+        }
+
+        [HttpGet]
+        [ODataRoute("Employees/Default.TopEmployees()")]
+        public IQueryable<Employee> TopEmployees()
+        {
+            return db.Employees.Where(x => x.ReportsTo == null);
         }
 
         // GET: odata/Employees(5)
@@ -144,11 +152,16 @@ namespace kendo_northwind_pg.Controllers
             return StatusCode(HttpStatusCode.NoContent);
         }
 
-        // GET: odata/Employees(5)/Employees1
+        // GET: odata/Employees(5)/Subordinates
         [EnableQuery]
-        public IQueryable<Employee> GetEmployees1([FromODataUri] int key)
+        public IQueryable<Employee> GetSubordinates([FromODataUri] int key)
         {
-            return db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.Employees1);
+            var employees = db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.Subordinates);
+            foreach (var employee in employees)
+            {
+                employee.hasChildren = db.Employees.Where(s => s.ReportsTo == employee.EmployeeID).Count() > 0;
+            }
+            return employees;
         }
 
         // GET: odata/Employees(5)/Employee1

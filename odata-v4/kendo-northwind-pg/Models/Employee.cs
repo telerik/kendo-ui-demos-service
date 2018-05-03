@@ -17,7 +17,7 @@ namespace kendo_northwind_pg.Models
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Employee()
         {
-            this.Employees1 = new HashSet<Employee>();
+            this.Subordinates = new HashSet<Employee>();
             this.Orders = new HashSet<Order>();
             this.Territories = new HashSet<Territory>();
         }
@@ -40,9 +40,11 @@ namespace kendo_northwind_pg.Models
         public string Notes { get; set; }
         public Nullable<int> ReportsTo { get; set; }
         public string PhotoPath { get; set; }
-    
+        // Needed for the TreeList widget to know that the current entity has children
+        public bool hasChildren { get; set; } = true;
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Employee> Employees1 { get; set; }
+        public virtual ICollection<Employee> Subordinates { get; set; }
         public virtual Employee Employee1 { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Order> Orders { get; set; }

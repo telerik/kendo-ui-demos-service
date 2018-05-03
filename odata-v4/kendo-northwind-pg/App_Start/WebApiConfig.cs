@@ -24,6 +24,7 @@ namespace kendo_northwind_pg
             builder.EntitySet<Customer>("Customers");
             builder.EntitySet<Category>("Categories");
             builder.EntitySet<Employee>("Employees").EntityType.Ignore(t => t.Photo);
+            builder.EntityType<Employee>().Collection.Function("TopEmployees").ReturnsCollectionFromEntitySet<Employee>("bindingParameter/Employees");
             builder.EntitySet<Order>("Orders");
             builder.EntitySet<Product>("Products");
             builder.EntitySet<Region>("Regions");
