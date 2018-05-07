@@ -26,7 +26,7 @@ namespace KendoCRUDService.Controllers
             return this.Jsonp(result);
         }
 
-        public ActionResult Filter(int? EmployeeId, string text)
+        public ActionResult Search(int? EmployeeId, string text)
         {
             IEnumerable<EmployeeModel> result;
 
