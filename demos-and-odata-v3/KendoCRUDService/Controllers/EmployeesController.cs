@@ -26,6 +26,23 @@ namespace KendoCRUDService.Controllers
             return this.Jsonp(result);
         }
 
+        public ActionResult Filter(int? EmployeeId, string text)
+        {
+            IEnumerable<EmployeeModel> result;
+
+            result = EmployeeRepository.All()
+                    .Where(e => EmployeeId == null ? e.ReportsTo == null : e.ReportsTo == Convert.ToInt32(EmployeeId))
+                    .Where(e => string.IsNullOrEmpty(text) || e.FullName.Contains(text) || 
+                        (EmployeeRepository.All()
+                            .Where(q => q.ReportsTo == e.EmployeeId && (q.FullName.Contains(text) ||
+                                (EmployeeRepository.All()
+                                .Where(p => p.ReportsTo == q.EmployeeId && (p.FullName.Contains(text)))
+                            ).Count() > 0))
+                        ).Count() > 0);
+
+            return this.Jsonp(result);
+        }
+
         public ActionResult Unique(string field)
         {
             var result = EmployeeRepository.AllComplete().Distinct(new EmployeeComparer(field));
