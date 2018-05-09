@@ -11,13 +11,13 @@ namespace signalr_for_aspnet_core.Hubs
     {
         public override System.Threading.Tasks.Task OnConnectedAsync()
         {
-            Groups.AddAsync(Context.ConnectionId, GetGroupName());
+            Groups.AddToGroupAsync(Context.ConnectionId, GetGroupName());
             return base.OnConnectedAsync();
         }
 
         public override System.Threading.Tasks.Task OnDisconnectedAsync(Exception e)
         {
-            Groups.RemoveAsync(Context.ConnectionId, GetGroupName());
+            Groups.RemoveFromGroupAsync(Context.ConnectionId, GetGroupName());
             return base.OnDisconnectedAsync(e);
         }
 
