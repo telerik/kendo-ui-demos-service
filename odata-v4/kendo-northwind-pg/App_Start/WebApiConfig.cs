@@ -2,6 +2,7 @@
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Builder;
 using kendo_northwind_pg.Models;
+using Microsoft.AspNet.OData.Batch;
 
 namespace kendo_northwind_pg
 {
@@ -34,7 +35,7 @@ namespace kendo_northwind_pg
 
             config.EnableCors();
             config.Count().Filter().OrderBy().Expand().Select().MaxTop(null);
-            config.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
+            config.MapODataServiceRoute("odata", "odata", builder.GetEdmModel(), new DefaultODataBatchHandler(GlobalConfiguration.DefaultServer));
         }
     }
 }
