@@ -25,7 +25,6 @@ namespace kendo_northwind_pg.Controllers
     builder.EntitySet<Order>("Orders"); 
     config.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
     */
-    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class ShippersController : ODataController
     {
         private NorthwindEntities db = new NorthwindEntities();
