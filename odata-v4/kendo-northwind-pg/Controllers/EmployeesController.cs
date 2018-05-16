@@ -27,7 +27,6 @@ namespace kendo_northwind_pg.Controllers
     builder.EntitySet<Territory>("Territories"); 
     config.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
     */
-    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class EmployeesController : ODataController
     {
         private NorthwindEntities db = new NorthwindEntities();
