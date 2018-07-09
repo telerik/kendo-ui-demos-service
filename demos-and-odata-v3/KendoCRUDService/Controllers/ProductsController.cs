@@ -60,17 +60,17 @@ namespace KendoCRUDService.Controllers
         {
             var model = this.DeserializeObject<SpreadsheetSubmitViewModel>("models");
 
-            if (model.Created != null)
+            if (model != null && model.Created != null)
             {
                 ProductRepository.Insert(model.Created);
             }
 
-            if (model.Updated != null)
+            if (model != null && model.Updated != null)
             {
                 ProductRepository.Update(model.Updated);
             }
 
-            if (model.Destroyed != null)
+            if (model != null && model.Destroyed != null)
             {
                 ProductRepository.Delete(model.Destroyed);
             }
