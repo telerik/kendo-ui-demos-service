@@ -17,7 +17,7 @@ namespace graphql_aspnet_core.Models.GraphQL
                 {
                     var product = context.GetArgument<Data.Product>("product");
                     var totalProducts = productRepository.GetTotalRecords().Result;
-                    product.ProductID = totalProducts++;
+                    product.ProductID = ++totalProducts;
 
                     return productRepository.AddAsync(product);
                 });
