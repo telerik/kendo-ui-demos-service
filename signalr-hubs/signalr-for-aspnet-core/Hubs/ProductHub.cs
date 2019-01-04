@@ -27,16 +27,16 @@ namespace signalr_for_aspnet_core.Hubs
             {
 
                 var products = context.Products.Select(p => new ProductSignalR
-                                    {
-                                        ID = p.ProductID,
-                                        ProductName = p.ProductName,
-                                        UnitPrice = (double)p.UnitPrice.GetValueOrDefault(),
-                                        UnitsInStock = p.UnitsInStock.GetValueOrDefault(),
-                                        CreatedAt = DateTime.Now.AddMilliseconds(1),
-                                        CategoryID = p.CategoryID,
-                                        Category = p.Category
-                                    })
-                                    .ToList();
+                    {
+                        ID = p.ProductID,
+                        ProductName = p.ProductName,
+                        UnitPrice = (double)p.UnitPrice.GetValueOrDefault(),
+                        UnitsInStock = p.UnitsInStock.GetValueOrDefault(),
+                        CreatedAt = DateTime.Now.AddMilliseconds(1),
+                        CategoryID = p.CategoryID,
+                        Category = p.Category
+                    })
+                    .ToList();
                 return products;
             }
         }

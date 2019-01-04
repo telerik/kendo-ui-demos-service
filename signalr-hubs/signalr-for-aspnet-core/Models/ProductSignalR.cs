@@ -13,6 +13,6 @@ namespace signalr_for_aspnet_core.Models
         public int UnitsInStock { get; set; }
         public DateTime? CreatedAt { get; set; }
         public Category Category { get; set; }
-        public int? CategoryID { get; internal set; }
+        public int? CategoryID { get; set; }
     }
 }
