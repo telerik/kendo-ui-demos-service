@@ -3,7 +3,7 @@ using signalr_for_aspnet_core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Data;
 
 namespace signalr_for_aspnet_core.Hubs
 {
@@ -25,18 +25,16 @@ namespace signalr_for_aspnet_core.Hubs
         {
             using (var context = new SampleEntitiesDataContext())
             {
-                var createdAt = DateTime.Now;
 
-                var products = context.Products
-                                    .OrderBy(p => p.ProductName)
-                                    .ToList()
-                                    .Select((p, index) => new ProductSignalR
+                var products = context.Products.Select(p => new ProductSignalR
                                     {
-                                        ID = (index + 1),
+                                        ID = p.ProductID,
                                         ProductName = p.ProductName,
                                         UnitPrice = (double)p.UnitPrice.GetValueOrDefault(),
                                         UnitsInStock = p.UnitsInStock.GetValueOrDefault(),
-                                        CreatedAt = createdAt = createdAt.AddMilliseconds(1)
+                                        CreatedAt = DateTime.Now.AddMilliseconds(1),
+                                        CategoryID = p.CategoryID,
+                                        Category = p.Category
                                     })
                                     .ToList();
                 return products;
