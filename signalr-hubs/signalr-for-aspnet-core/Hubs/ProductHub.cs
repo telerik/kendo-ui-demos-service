@@ -45,6 +45,7 @@ namespace signalr_for_aspnet_core.Hubs
         {
             product.ID = DateTime.Now.Ticks;
             product.CreatedAt = DateTime.Now;
+            product.CategoryID = product.Category.CategoryID;
 
             Clients.OthersInGroup(GetGroupName()).SendAsync("create", product);
 
