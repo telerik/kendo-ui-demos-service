@@ -37,6 +37,7 @@ namespace signalr_for_aspnet_core.Hubs
                         Category = p.Category
                     })
                     .ToList();
+
                 return products;
             }
         }
@@ -45,7 +46,7 @@ namespace signalr_for_aspnet_core.Hubs
         {
             product.ID = DateTime.Now.Ticks;
             product.CreatedAt = DateTime.Now;
-            product.CategoryID = product.Category.CategoryID;
+            product.CategoryID = product.Category != null ? product.Category.CategoryID : 1;
 
             Clients.OthersInGroup(GetGroupName()).SendAsync("create", product);
 
