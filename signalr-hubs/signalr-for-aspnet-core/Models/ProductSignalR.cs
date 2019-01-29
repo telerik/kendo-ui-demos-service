@@ -12,7 +12,6 @@ namespace signalr_for_aspnet_core.Models
         public double UnitPrice { get; set; }
         public int UnitsInStock { get; set; }
         public DateTime? CreatedAt { get; set; }
-        public Category Category { get; set; }
-        public int? CategoryID { get; set; }
+        public CategorySignalR Category { get; set; }
     }
 }

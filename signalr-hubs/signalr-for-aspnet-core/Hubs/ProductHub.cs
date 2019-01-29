@@ -33,8 +33,11 @@ namespace signalr_for_aspnet_core.Hubs
                         UnitPrice = (double)p.UnitPrice.GetValueOrDefault(),
                         UnitsInStock = p.UnitsInStock.GetValueOrDefault(),
                         CreatedAt = DateTime.Now.AddMilliseconds(1),
-                        CategoryID = p.CategoryID,
-                        Category = p.Category
+                        Category = new CategorySignalR()
+                        {
+                            CategoryID = p.Category.CategoryID,
+                            CategoryName = p.Category.CategoryName
+                        }
                     })
                     .ToList();
 
@@ -46,7 +49,7 @@ namespace signalr_for_aspnet_core.Hubs
         {
             product.ID = DateTime.Now.Ticks;
             product.CreatedAt = DateTime.Now;
-            product.CategoryID = product.Category != null ? product.Category.CategoryID : 1;
+            product.Category = product.Category ?? new CategorySignalR() { CategoryID = 1 };
 
             Clients.OthersInGroup(GetGroupName()).SendAsync("create", product);
 
