@@ -8,7 +8,7 @@ namespace KendoCRUDService.Controllers
 {
     public class OrdersController : Controller
     {
-        public ActionResult ValueMapper(int[] values)
+        public ActionResult ValueMapper(int?[] values)
         {
             var indices = new List<int>();
 
