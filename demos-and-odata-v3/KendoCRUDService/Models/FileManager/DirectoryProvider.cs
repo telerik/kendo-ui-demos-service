@@ -58,28 +58,6 @@ namespace KendoCRUDService.Models.FileManager
                 });
         }
 
-        public IEnumerable<FileManagerEntry> GetDirectoryTree(string path)
-        {
-            var directory = new DirectoryInfo(Server.MapPath(path));
-
-            return directory.GetDirectories()
-                .Select((subDirectory) => {
-                    return new FileManagerEntry
-                    {
-                        Name = subDirectory.Name,
-                        Path = GetVirtualPath(subDirectory.FullName),
-                        Extension = subDirectory.Extension,
-                        IsDirectory = true,
-                        HasDirectories = subDirectory.GetDirectories().Length > 0,
-                        Created = subDirectory.CreationTime,
-                        CreatedUtc = subDirectory.CreationTimeUtc,
-                        Modified = subDirectory.LastWriteTime,
-                        ModifiedUtc = subDirectory.LastWriteTimeUtc,
-                        Directories = GetDirectoryTree(GetVirtualPath(subDirectory.FullName))
-                    };
-                });
-        }
-
         public System.Web.HttpServerUtilityBase Server { get; set; }
     }
 }
