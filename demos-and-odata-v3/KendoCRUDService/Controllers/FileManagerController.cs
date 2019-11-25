@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -109,22 +110,7 @@ namespace KendoCRUDService.Controllers
                 {
                     directoryProvider.Server = Server;
 
-                    var result = directoryProvider
-                        .GetDirectoryTree(path)
-                        .Select(f => new
-                        {
-                            name = f.Name,
-                            size = f.Size,
-                            path = f.Path,
-                            extension = f.Extension,
-                            isDirectory = f.IsDirectory,
-                            hasDirectories = f.HasDirectories,
-                            created = f.Created,
-                            createdUtc = f.CreatedUtc,
-                            modified = f.Modified,
-                            modifiedUtc = f.ModifiedUtc,
-                            directories = f.Directories
-                        });
+                    var result = GetDirectoryTree(path); 
 
                     return Json(result, JsonRequestBehavior.AllowGet);
                 }
@@ -135,6 +121,27 @@ namespace KendoCRUDService.Controllers
             }
 
             throw new HttpException(403, "Forbidden");
+        }
+
+        private IEnumerable<object> GetDirectoryTree(string path)
+        {
+           return directoryProvider
+                    .GetContent(path, null)
+                    .Where(d => d.IsDirectory == true)
+                    .Select(f => new
+                    {
+                        name = f.Name,
+                        size = f.Size,
+                        path = f.Path,
+                        extension = f.Extension,
+                        isDirectory = f.IsDirectory,
+                        hasDirectories = f.HasDirectories,
+                        created = f.Created,
+                        createdUtc = f.CreatedUtc,
+                        modified = f.Modified,
+                        modifiedUtc = f.ModifiedUtc,
+                        directories = GetDirectoryTree(f.Path)
+                    });
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
