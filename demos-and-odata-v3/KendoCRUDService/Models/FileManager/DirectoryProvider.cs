@@ -12,11 +12,6 @@ namespace KendoCRUDService.Models.FileManager
             return GetFiles(path, filter).Concat(GetDirectories(path));
         }
 
-        private string GetVirtualPath(string path)
-        { 
-            return VirtualPathUtility.ToAbsolute(path.Replace(Server.MapPath("~/"), "~/").Replace(@"\", "/"));
-        }
-
         private IEnumerable<FileManagerEntry> GetFiles(string path, string filter)
         {
             var directory = new DirectoryInfo(Server.MapPath(path));
@@ -28,7 +23,7 @@ namespace KendoCRUDService.Models.FileManager
                 {
                     Name = file.Name,
                     Size = file.Length,
-                    Path = GetVirtualPath(file.FullName),
+                    Path = file.FullName,
                     Extension = file.Extension,
                     IsDirectory = false,
                     HasDirectories = false,
@@ -47,7 +42,7 @@ namespace KendoCRUDService.Models.FileManager
                 .Select(subDirectory => new FileManagerEntry
                 {
                     Name = subDirectory.Name,
-                    Path = GetVirtualPath(subDirectory.FullName),
+                    Path = subDirectory.FullName,
                     Extension = subDirectory.Extension,
                     IsDirectory = true,
                     HasDirectories = subDirectory.GetDirectories().Length > 0,
@@ -56,6 +51,42 @@ namespace KendoCRUDService.Models.FileManager
                     Modified = subDirectory.LastWriteTime,
                     ModifiedUtc = subDirectory.LastWriteTimeUtc
                 });
+        }
+
+        public FileManagerEntry GetDirectory(string path)
+        {
+            var directory = new DirectoryInfo(path);
+
+            return  new FileManagerEntry
+                    {
+                        Name = directory.Name,
+                        Path = directory.FullName,
+                        Extension = directory.Extension,
+                        IsDirectory = true,
+                        HasDirectories = directory.GetDirectories().Length > 0,
+                        Created = directory.CreationTime,
+                        CreatedUtc = directory.CreationTimeUtc,
+                        Modified = directory.LastWriteTime,
+                        ModifiedUtc = directory.LastWriteTimeUtc
+                    };
+        }
+
+        public FileManagerEntry GetFile(string path)
+        {
+            var file = new FileInfo(path);
+
+            return new FileManagerEntry
+            {
+                Name = file.Name,
+                Path = file.FullName,
+                Extension = file.Extension,
+                IsDirectory = false,
+                HasDirectories = false,
+                Created = file.CreationTime,
+                CreatedUtc = file.CreationTimeUtc,
+                Modified = file.LastWriteTime,
+                ModifiedUtc = file.LastWriteTimeUtc
+            };
         }
 
         public System.Web.HttpServerUtilityBase Server { get; set; }

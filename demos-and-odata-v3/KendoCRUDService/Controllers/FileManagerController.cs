@@ -38,6 +38,11 @@ namespace KendoCRUDService.Controllers
             return VirtualPathUtility.ToAbsolute(virtualPath);
         }
 
+        private string ToVirtual(string path)
+        {
+            return VirtualPathUtility.ToAppRelative(path.Replace(Server.MapPath("~/"), "~/").Replace(@"\", "/"));
+        }
+
         private string CombinePaths(string basePath, string relativePath)
         {
             return VirtualPathUtility.Combine(VirtualPathUtility.AppendTrailingSlash(basePath), relativePath);
@@ -60,7 +65,7 @@ namespace KendoCRUDService.Controllers
                 return ToAbsolute(ContentPath);
             }
 
-            return CombinePaths(ToAbsolute(ContentPath), path);
+            return CombinePaths(ToAbsolute(ContentPath), ToAbsolute(path));
         }
 
         public virtual JsonResult Read(string path)
@@ -79,7 +84,7 @@ namespace KendoCRUDService.Controllers
                         {
                             name = f.Name,
                             size = f.Size,
-                            path = f.Path,
+                            path = ToVirtual(f.Path),
                             extension = f.Extension,
                             isDirectory = f.IsDirectory,
                             hasDirectories = f.HasDirectories,
@@ -132,7 +137,7 @@ namespace KendoCRUDService.Controllers
                     {
                         name = f.Name,
                         size = f.Size,
-                        path = f.Path,
+                        path = ToVirtual(f.Path),
                         extension = f.Extension,
                         isDirectory = f.IsDirectory,
                         hasDirectories = f.HasDirectories,
@@ -140,18 +145,18 @@ namespace KendoCRUDService.Controllers
                         createdUtc = f.CreatedUtc,
                         modified = f.Modified,
                         modifiedUtc = f.ModifiedUtc,
-                        directories = GetDirectoryTree(f.Path)
+                        directories = GetDirectoryTree(ToVirtual(f.Path))
                     });
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
-        public virtual ActionResult Destroy(string path, bool isDirectory)
+        public virtual ActionResult Destroy(FileManagerEntry entry)
         {
-            path = NormalizePath(path);
+            var path = NormalizePath(entry.Path);
 
             if (!string.IsNullOrEmpty(path))
             {
-                if (isDirectory)
+                if (entry.IsDirectory)
                 {
                     DeleteDirectory(path);
                 }
@@ -205,37 +210,90 @@ namespace KendoCRUDService.Controllers
             }
         }
 
-        public virtual bool AuthorizeCreateDirectory(string path, string name)
+        public virtual bool Authorize(string path)
         {
             return CanAccess(path);
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
-        public virtual ActionResult Create(string path, FileBrowserEntry entry)
+        public virtual ActionResult Create(FileManagerEntry entry)
         {
-            path = NormalizePath(path);
+            var path = NormalizePath(entry.Path);
             var name = entry.Name;
+            FileManagerEntry newEntry;
 
-            if (!string.IsNullOrEmpty(name) && AuthorizeCreateDirectory(path, name))
+            if (!string.IsNullOrEmpty(name) && Authorize(path))
             {
                 var physicalPath = Path.Combine(Server.MapPath(path), name);
 
-                if (!Directory.Exists(physicalPath))
+                if (entry.IsDirectory && !Directory.Exists(physicalPath))
                 {
                     Directory.CreateDirectory(physicalPath);
-                }
 
-                return Json(new
-                        {
-                            name = entry.Name,
-                            size = entry.Size,
-                            isDirectory = true
-                        });
+                    newEntry = directoryProvider.GetDirectory(physicalPath);
+
+                    return Json(new
+                    {
+                        name = newEntry.Name,
+                        size = newEntry.Size,
+                        path = ToVirtual(newEntry.Path),
+                        extension = newEntry.Extension,
+                        isDirectory = newEntry.IsDirectory,
+                        hasDirectories = newEntry.HasDirectories,
+                        created = newEntry.Created,
+                        createdUtc = newEntry.CreatedUtc,
+                        modified = newEntry.Modified,
+                        modifiedUtc = newEntry.ModifiedUtc,
+                    });
+                }
             }
 
             throw new HttpException(403, "Forbidden");
         }
 
+        [AcceptVerbs(HttpVerbs.Post)]
+        public virtual ActionResult Update(FileManagerEntry entry)
+        {
+            var path = NormalizePath(entry.Path);
+            var name = entry.Name;
+            FileManagerEntry newEntry;
+            
+
+            if (!string.IsNullOrEmpty(name) && Authorize(path))
+            {
+                var physicalPath = Server.MapPath(path);
+
+                if (entry.IsDirectory)
+                {
+                    var directory = new DirectoryInfo(physicalPath);
+                    var newPath = Path.Combine(directory.Parent.FullName, name);
+                    Directory.Move(physicalPath, newPath);
+                    newEntry = directoryProvider.GetDirectory(newPath);
+                }
+                else 
+                {
+                    var file = new FileInfo(physicalPath);
+                    var newPath = Path.Combine(file.DirectoryName, name);
+                    System.IO.File.Move(file.FullName, newPath);
+                    newEntry = directoryProvider.GetFile(newPath);
+                }
+
+                return Json(new {
+                    name = newEntry.Name,
+                    size = newEntry.Size,
+                    path = ToVirtual(newEntry.Path),
+                    extension = newEntry.Extension,
+                    isDirectory = newEntry.IsDirectory,
+                    hasDirectories = newEntry.HasDirectories,
+                    created = newEntry.Created,
+                    createdUtc = newEntry.CreatedUtc,
+                    modified = newEntry.Modified,
+                    modifiedUtc = newEntry.ModifiedUtc,
+                });
+            }
+
+            throw new HttpException(403, "Forbidden");
+        }
 
         public virtual bool AuthorizeUpload(string path, HttpPostedFileBase file)
         {
@@ -271,24 +329,24 @@ namespace KendoCRUDService.Controllers
             throw new HttpException(403, "Forbidden");
         }
 
-        [OutputCache(Duration = 360, VaryByParam = "path")]
-        public ActionResult File(string fileName)
-        {
-            var path = NormalizePath(fileName);
+        //[OutputCache(Duration = 360, VaryByParam = "path")]
+        //public ActionResult File(string fileName)
+        //{
+        //    var path = NormalizePath(fileName);
 
-            if (AuthorizeFile(path))
-            {
-                var physicalPath = Server.MapPath(path);
+        //    if (AuthorizeFile(path))
+        //    {
+        //        var physicalPath = Server.MapPath(path);
 
-                if (System.IO.File.Exists(physicalPath))
-                {
-                    const string contentType = "application/octet-stream";
-                    return File(System.IO.File.OpenRead(physicalPath), contentType, fileName);
-                }
-            }
+        //        if (System.IO.File.Exists(physicalPath))
+        //        {
+        //            const string contentType = "application/octet-stream";
+        //            return File(System.IO.File.OpenRead(physicalPath), contentType, fileName);
+        //        }
+        //    }
 
-            throw new HttpException(403, "Forbidden");
-        }
+        //    throw new HttpException(403, "Forbidden");
+        //}
 
         public virtual bool AuthorizeFile(string path)
         {
