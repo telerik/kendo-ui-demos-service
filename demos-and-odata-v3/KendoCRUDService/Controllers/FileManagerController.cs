@@ -55,7 +55,7 @@ namespace KendoCRUDService.Controllers
 
         protected virtual bool CanAccess(string path)
         {
-            return path.StartsWith(ToAbsolute(ContentPath), StringComparison.OrdinalIgnoreCase);
+            return Server.MapPath(path).StartsWith(Server.MapPath(ContentPath), StringComparison.OrdinalIgnoreCase);
         }
 
         private string NormalizePath(string path)
@@ -65,7 +65,7 @@ namespace KendoCRUDService.Controllers
                 return ToAbsolute(ContentPath);
             }
 
-            return CombinePaths(ToAbsolute(ContentPath), ToAbsolute(path));
+            return CombinePaths(ToAbsolute(ContentPath), path);
         }
 
         public virtual JsonResult Read(string path)
@@ -225,6 +225,14 @@ namespace KendoCRUDService.Controllers
             if (!string.IsNullOrEmpty(name) && Authorize(path))
             {
                 var physicalPath = Path.Combine(Server.MapPath(path), name);
+
+                var sequence = 0;
+                var tempName = name;
+
+                while (Directory.Exists(physicalPath)) {
+                    tempName = name + String.Format("({0})", ++sequence);
+                    physicalPath = Path.Combine(Server.MapPath(path), tempName);
+                }
 
                 if (entry.IsDirectory && !Directory.Exists(physicalPath))
                 {
