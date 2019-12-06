@@ -17,7 +17,7 @@ namespace KendoCRUDService.Models.FileManager
             var directory = new DirectoryInfo(Server.MapPath(path));
 
             var extensions = (filter ?? "*").Split(",|;".ToCharArray(), System.StringSplitOptions.RemoveEmptyEntries);
-
+            
             return extensions.SelectMany(directory.GetFiles)
                 .Select(file => new FileManagerEntry
                 {
@@ -30,7 +30,8 @@ namespace KendoCRUDService.Models.FileManager
                     Created = file.CreationTime,
                     CreatedUtc = file.CreationTimeUtc,
                     Modified = file.LastWriteTime,
-                    ModifiedUtc = file.LastWriteTimeUtc
+                    ModifiedUtc = file.LastWriteTimeUtc,
+                    ParentId = file.Directory.FullName
                 });
         }
 
@@ -49,7 +50,8 @@ namespace KendoCRUDService.Models.FileManager
                     Created = subDirectory.CreationTime,
                     CreatedUtc = subDirectory.CreationTimeUtc,
                     Modified = subDirectory.LastWriteTime,
-                    ModifiedUtc = subDirectory.LastWriteTimeUtc
+                    ModifiedUtc = subDirectory.LastWriteTimeUtc,
+                    ParentId = subDirectory.Parent.FullName
                 });
         }
 
@@ -67,8 +69,9 @@ namespace KendoCRUDService.Models.FileManager
                         Created = directory.CreationTime,
                         CreatedUtc = directory.CreationTimeUtc,
                         Modified = directory.LastWriteTime,
-                        ModifiedUtc = directory.LastWriteTimeUtc
-                    };
+                        ModifiedUtc = directory.LastWriteTimeUtc,
+                        ParentId = directory.Parent.FullName
+            };
         }
 
         public FileManagerEntry GetFile(string path)
@@ -85,7 +88,8 @@ namespace KendoCRUDService.Models.FileManager
                 Created = file.CreationTime,
                 CreatedUtc = file.CreationTimeUtc,
                 Modified = file.LastWriteTime,
-                ModifiedUtc = file.LastWriteTimeUtc
+                ModifiedUtc = file.LastWriteTimeUtc,
+                ParentId = file.Directory.FullName
             };
         }
 

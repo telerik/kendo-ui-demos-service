@@ -91,7 +91,8 @@ namespace KendoCRUDService.Controllers
                             created = f.Created,
                             createdUtc = f.CreatedUtc,
                             modified = f.Modified,
-                            modifiedUtc = f.ModifiedUtc
+                            modifiedUtc = f.ModifiedUtc,
+                            parentId = ToVirtual(f.ParentId)
                         });
 
                     return Json(result, JsonRequestBehavior.AllowGet);
@@ -145,6 +146,7 @@ namespace KendoCRUDService.Controllers
                         createdUtc = f.CreatedUtc,
                         modified = f.Modified,
                         modifiedUtc = f.ModifiedUtc,
+                        parentId = ToVirtual(f.ParentId),
                         directories = GetDirectoryTree(ToVirtual(f.Path))
                     });
         }
@@ -252,6 +254,7 @@ namespace KendoCRUDService.Controllers
                         createdUtc = newEntry.CreatedUtc,
                         modified = newEntry.Modified,
                         modifiedUtc = newEntry.ModifiedUtc,
+                        parentId = ToVirtual(newEntry.ParentId)
                     });
                 }
             }
@@ -297,6 +300,7 @@ namespace KendoCRUDService.Controllers
                     createdUtc = newEntry.CreatedUtc,
                     modified = newEntry.Modified,
                     modifiedUtc = newEntry.ModifiedUtc,
+                    parentId = ToVirtual(newEntry.ParentId)
                 });
             }
 
