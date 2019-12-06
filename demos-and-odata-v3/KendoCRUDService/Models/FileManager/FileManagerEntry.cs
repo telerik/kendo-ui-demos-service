@@ -11,6 +11,7 @@ namespace KendoCRUDService.Models.FileManager
         public long Size { get; set; }
         public string Path { get; set; }
         public string Extension { get; set; }
+        public string ParentId { get; set; }
         public bool IsDirectory { get; set; }
         public bool HasDirectories { get; set; }
 
