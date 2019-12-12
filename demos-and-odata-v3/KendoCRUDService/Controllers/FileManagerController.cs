@@ -68,9 +68,9 @@ namespace KendoCRUDService.Controllers
             return CombinePaths(ToAbsolute(ContentPath), path);
         }
 
-        public virtual JsonResult Read(string path)
+        public virtual JsonResult Read(string target)
         {
-            path = NormalizePath(path);
+            var path = NormalizePath(target);
 
             if (AuthorizeRead(path))
             {
@@ -218,9 +218,9 @@ namespace KendoCRUDService.Controllers
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
-        public virtual ActionResult Create(FileManagerEntry entry)
+        public virtual ActionResult Create(string target, FileManagerEntry entry)
         {
-            var path = NormalizePath(entry.Path);
+            var path = NormalizePath(target);
             var name = entry.Name;
             FileManagerEntry newEntry;
 
@@ -263,7 +263,7 @@ namespace KendoCRUDService.Controllers
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
-        public virtual ActionResult Update(FileManagerEntry entry)
+        public virtual ActionResult Update(string target, FileManagerEntry entry)
         {
             var path = NormalizePath(entry.Path);
             var name = entry.Name;
