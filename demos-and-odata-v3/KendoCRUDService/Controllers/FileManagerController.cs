@@ -40,7 +40,7 @@ namespace KendoCRUDService.Controllers
 
         private string ToVirtual(string path)
         {
-            return VirtualPathUtility.ToAppRelative(path.Replace(Server.MapPath("~/"), "~/").Replace(@"\", "/"));
+            return path.Replace(Server.MapPath(ContentPath), "").Replace(@"\", "/");
         }
 
         private string CombinePaths(string basePath, string relativePath)
@@ -91,8 +91,7 @@ namespace KendoCRUDService.Controllers
                             created = f.Created,
                             createdUtc = f.CreatedUtc,
                             modified = f.Modified,
-                            modifiedUtc = f.ModifiedUtc,
-                            parentId = ToVirtual(f.ParentId)
+                            modifiedUtc = f.ModifiedUtc
                         });
 
                     return Json(result, JsonRequestBehavior.AllowGet);
@@ -104,51 +103,6 @@ namespace KendoCRUDService.Controllers
             }
 
             throw new HttpException(403, "Forbidden");
-        }
-
-        public virtual JsonResult DirectoryTreeRead(string path)
-        {
-            path = NormalizePath(path);
-
-            if (AuthorizeRead(path))
-            {
-                try
-                {
-                    directoryProvider.Server = Server;
-
-                    var result = GetDirectoryTree(path); 
-
-                    return Json(result, JsonRequestBehavior.AllowGet);
-                }
-                catch (DirectoryNotFoundException)
-                {
-                    throw new HttpException(404, "File Not Found");
-                }
-            }
-
-            throw new HttpException(403, "Forbidden");
-        }
-
-        private IEnumerable<object> GetDirectoryTree(string path)
-        {
-           return directoryProvider
-                    .GetContent(path, null)
-                    .Where(d => d.IsDirectory == true)
-                    .Select(f => new
-                    {
-                        name = f.Name,
-                        size = f.Size,
-                        path = ToVirtual(f.Path),
-                        extension = f.Extension,
-                        isDirectory = f.IsDirectory,
-                        hasDirectories = f.HasDirectories,
-                        created = f.Created,
-                        createdUtc = f.CreatedUtc,
-                        modified = f.Modified,
-                        modifiedUtc = f.ModifiedUtc,
-                        parentId = ToVirtual(f.ParentId),
-                        directories = GetDirectoryTree(ToVirtual(f.Path))
-                    });
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
@@ -253,8 +207,7 @@ namespace KendoCRUDService.Controllers
                         created = newEntry.Created,
                         createdUtc = newEntry.CreatedUtc,
                         modified = newEntry.Modified,
-                        modifiedUtc = newEntry.ModifiedUtc,
-                        parentId = ToVirtual(newEntry.ParentId)
+                        modifiedUtc = newEntry.ModifiedUtc
                     });
                 }
             }
@@ -299,8 +252,7 @@ namespace KendoCRUDService.Controllers
                     created = newEntry.Created,
                     createdUtc = newEntry.CreatedUtc,
                     modified = newEntry.Modified,
-                    modifiedUtc = newEntry.ModifiedUtc,
-                    parentId = ToVirtual(newEntry.ParentId)
+                    modifiedUtc = newEntry.ModifiedUtc
                 });
             }
 
