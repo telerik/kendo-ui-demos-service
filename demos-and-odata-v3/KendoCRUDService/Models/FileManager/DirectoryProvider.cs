@@ -80,6 +80,7 @@ namespace KendoCRUDService.Models.FileManager
             {
                 Name = file.Name,
                 Path = file.FullName,
+                Size = file.Length,
                 Extension = file.Extension,
                 IsDirectory = false,
                 HasDirectories = false,
