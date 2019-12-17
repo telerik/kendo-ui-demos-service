@@ -174,62 +174,24 @@ namespace KendoCRUDService.Controllers
         [AcceptVerbs(HttpVerbs.Post)]
         public virtual ActionResult Create(string target, FileManagerEntry entry)
         {
-            var path = NormalizePath(target);
-            var name = entry.Name;
             FileManagerEntry newEntry;
 
-            if (!string.IsNullOrEmpty(name) && Authorize(path))
+            if (!Authorize(NormalizePath(target)))
             {
-                var physicalPath = Path.Combine(Server.MapPath(path), name);
-
-                var sequence = 0;
-                var tempName = name;
-
-                while (Directory.Exists(physicalPath)) {
-                    tempName = name + String.Format("({0})", ++sequence);
-                    physicalPath = Path.Combine(Server.MapPath(path), tempName);
-                }
-
-                if (entry.IsDirectory && !Directory.Exists(physicalPath))
-                {
-                    Directory.CreateDirectory(physicalPath);
-
-                    newEntry = directoryProvider.GetDirectory(physicalPath);
-
-                    return Json(new
-                    {
-                        name = newEntry.Name,
-                        size = newEntry.Size,
-                        path = ToVirtual(newEntry.Path),
-                        extension = newEntry.Extension,
-                        isDirectory = newEntry.IsDirectory,
-                        hasDirectories = newEntry.HasDirectories,
-                        created = newEntry.Created,
-                        createdUtc = newEntry.CreatedUtc,
-                        modified = newEntry.Modified,
-                        modifiedUtc = newEntry.ModifiedUtc
-                    });
-                }
-            }
-
-            throw new HttpException(403, "Forbidden");
-        }
-
-        [AcceptVerbs(HttpVerbs.Post)]
-        public virtual ActionResult Update(string target, FileManagerEntry entry)
-        {
-            FileManagerEntry newEntry;
-
-            if (!Authorize(NormalizePath(entry.Path)) && !Authorize(NormalizePath(target))) {
                 throw new HttpException(403, "Forbidden");
             }
 
-            if (entry.Path.Contains(entry.Name)) {
-                newEntry = CopyEntry(target, entry);
-            } else {
-                newEntry = RenameEntry(entry);
+
+            if (String.IsNullOrEmpty(entry.Path))
+            {
+                newEntry = CreateNewFolder(target, entry);
             }
-                    
+            else
+            {
+                newEntry = CopyEntry(target, entry);
+            }
+
+
             return Json(new
             {
                 name = newEntry.Name,
@@ -249,36 +211,104 @@ namespace KendoCRUDService.Controllers
         {
             var path = NormalizePath(entry.Path);
             var physicalPath = Server.MapPath(path);
-            var targetPath = NormalizePath(target);
-            var physicalTarget = Path.Combine(Server.MapPath(targetPath), entry.Name);
-            var tempName = entry.Name;
+            var physicalTarget = EnsureUniqueName(NormalizePath(target), entry);
+
             FileManagerEntry newEntry;
+
+            if (entry.IsDirectory)
+            {
+                CopyDirectory(new DirectoryInfo(physicalPath), Directory.CreateDirectory(physicalTarget));
+                newEntry = directoryProvider.GetDirectory(physicalTarget);
+            }
+            else
+            {
+                System.IO.File.Copy(physicalPath, physicalTarget);
+                newEntry = directoryProvider.GetFile(physicalTarget);
+            }
+
+            return newEntry;
+        }
+
+        private void CopyDirectory(DirectoryInfo source, DirectoryInfo target) 
+        {
+            foreach (FileInfo fi in source.GetFiles())
+            {
+                Console.WriteLine(@"Copying {0}\{1}", target.FullName, fi.Name);
+                fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+            }
+
+            // Copy each subdirectory using recursion.
+            foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
+            {
+                DirectoryInfo nextTargetSubDir =
+                    target.CreateSubdirectory(diSourceSubDir.Name);
+                CopyDirectory(diSourceSubDir, nextTargetSubDir);
+            }
+        }
+
+        private string EnsureUniqueName(string target, FileManagerEntry entry)
+        {
+            var tempName = entry.Name;
             int sequence = 0;
-
-
+            var physicalTarget = Path.Combine(Server.MapPath(target), tempName);
 
             if (entry.IsDirectory)
             {
                 while (Directory.Exists(physicalTarget))
                 {
                     tempName = entry.Name + String.Format("({0})", ++sequence);
-                    physicalTarget = Path.Combine(Server.MapPath(targetPath), tempName);
+                    physicalTarget = Path.Combine(Server.MapPath(target), tempName);
                 }
-                Directory.Move(physicalPath, physicalTarget);
-                newEntry = directoryProvider.GetDirectory(physicalTarget);
             }
-            else
+            else 
             {
                 while (System.IO.File.Exists(physicalTarget))
                 {
                     tempName = entry.Name.Replace(entry.Extension, "") + String.Format("({0})", ++sequence) + entry.Extension;
-                    physicalTarget = Path.Combine(Server.MapPath(targetPath), tempName);
+                    physicalTarget = Path.Combine(Server.MapPath(target), tempName);
                 }
-                System.IO.File.Copy(physicalPath, physicalTarget);
-                newEntry = directoryProvider.GetFile(physicalPath);
             }
 
+            return physicalTarget;
+        }
+
+        private FileManagerEntry CreateNewFolder(string target, FileManagerEntry entry)
+        {
+            FileManagerEntry newEntry;
+            var path = NormalizePath(target);
+            string physicalPath = EnsureUniqueName(path, entry);
+
+            Directory.CreateDirectory(physicalPath);
+
+            newEntry = directoryProvider.GetDirectory(physicalPath);
+
             return newEntry;
+        }
+
+        [AcceptVerbs(HttpVerbs.Post)]
+        public virtual ActionResult Update(string target, FileManagerEntry entry)
+        {
+            FileManagerEntry newEntry;
+
+            if (!Authorize(NormalizePath(entry.Path)) && !Authorize(NormalizePath(target))) {
+                throw new HttpException(403, "Forbidden");
+            }
+
+            newEntry = RenameEntry(entry);
+                    
+            return Json(new
+            {
+                name = newEntry.Name,
+                size = newEntry.Size,
+                path = ToVirtual(newEntry.Path),
+                extension = newEntry.Extension,
+                isDirectory = newEntry.IsDirectory,
+                hasDirectories = newEntry.HasDirectories,
+                created = newEntry.Created,
+                createdUtc = newEntry.CreatedUtc,
+                modified = newEntry.Modified,
+                modifiedUtc = newEntry.ModifiedUtc
+            });
         }
 
         private FileManagerEntry RenameEntry(FileManagerEntry entry)
