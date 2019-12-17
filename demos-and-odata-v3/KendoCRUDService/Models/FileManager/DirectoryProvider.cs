@@ -49,8 +49,7 @@ namespace KendoCRUDService.Models.FileManager
                     Created = subDirectory.CreationTime,
                     CreatedUtc = subDirectory.CreationTimeUtc,
                     Modified = subDirectory.LastWriteTime,
-                    ModifiedUtc = subDirectory.LastWriteTimeUtc,
-                    ParentId = subDirectory.Parent.FullName
+                    ModifiedUtc = subDirectory.LastWriteTimeUtc
                 });
         }
 
@@ -87,8 +86,7 @@ namespace KendoCRUDService.Models.FileManager
                 Created = file.CreationTime,
                 CreatedUtc = file.CreationTimeUtc,
                 Modified = file.LastWriteTime,
-                ModifiedUtc = file.LastWriteTimeUtc,
-                ParentId = file.Directory.FullName
+                ModifiedUtc = file.LastWriteTimeUtc
             };
         }
 
