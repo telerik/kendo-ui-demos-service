@@ -19,7 +19,6 @@ namespace KendoCRUDService.Models.FileManager
         public DateTime Modified { get; set; }
         public DateTime ModifiedUtc { get; set; }
 
-        public IEnumerable<FileManagerEntry> Directories { get; set; }
-
+        public IEnumerable<FileManagerEntry> Directories { get; set; }        
     }
 }
