@@ -21,7 +21,7 @@ namespace KendoCRUDService.Models.FileManager
             return extensions.SelectMany(directory.GetFiles)
                 .Select(file => new FileManagerEntry
                 {
-                    Name = file.Name,
+                    Name = Path.GetFileNameWithoutExtension(file.Name),
                     Size = file.Length,
                     Path = file.FullName,
                     Extension = file.Extension,
@@ -77,7 +77,7 @@ namespace KendoCRUDService.Models.FileManager
 
             return new FileManagerEntry
             {
-                Name = file.Name,
+                Name = Path.GetFileNameWithoutExtension(file.Name),
                 Path = file.FullName,
                 Size = file.Length,
                 Extension = file.Extension,

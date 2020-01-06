@@ -229,7 +229,7 @@ namespace KendoCRUDService.Controllers
             return newEntry;
         }
 
-        private void CopyDirectory(DirectoryInfo source, DirectoryInfo target) 
+        private void CopyDirectory(DirectoryInfo source, DirectoryInfo target)
         {
             foreach (FileInfo fi in source.GetFiles())
             {
@@ -248,7 +248,7 @@ namespace KendoCRUDService.Controllers
 
         private string EnsureUniqueName(string target, FileManagerEntry entry)
         {
-            var tempName = entry.Name;
+            var tempName = entry.Name + entry.Extension;
             int sequence = 0;
             var physicalTarget = Path.Combine(Server.MapPath(target), tempName);
 
@@ -260,11 +260,11 @@ namespace KendoCRUDService.Controllers
                     physicalTarget = Path.Combine(Server.MapPath(target), tempName);
                 }
             }
-            else 
+            else
             {
                 while (System.IO.File.Exists(physicalTarget))
                 {
-                    tempName = entry.Name.Replace(entry.Extension, "") + String.Format("({0})", ++sequence) + entry.Extension;
+                    tempName = entry.Name + String.Format("({0})", ++sequence) + entry.Extension;
                     physicalTarget = Path.Combine(Server.MapPath(target), tempName);
                 }
             }
@@ -295,7 +295,7 @@ namespace KendoCRUDService.Controllers
             }
 
             newEntry = RenameEntry(entry);
-                    
+
             return Json(new
             {
                 name = newEntry.Name,
@@ -314,26 +314,23 @@ namespace KendoCRUDService.Controllers
         private FileManagerEntry RenameEntry(FileManagerEntry entry)
         {
             var path = NormalizePath(entry.Path);
-            var name = entry.Name;
             var physicalPath = Server.MapPath(path);
+            var physicalTarget = EnsureUniqueName(Path.GetDirectoryName(path), entry);
             FileManagerEntry newEntry;
 
             if (entry.IsDirectory)
             {
-                var directory = new DirectoryInfo(physicalPath);
-                var newPath = Path.Combine(directory.Parent.FullName, name);
-                Directory.Move(physicalPath, newPath);
-                newEntry = directoryProvider.GetDirectory(newPath);
+                Directory.Move(physicalPath, physicalTarget);
+                newEntry = directoryProvider.GetDirectory(physicalTarget);
             }
             else
             {
                 var file = new FileInfo(physicalPath);
-                var newPath = Path.Combine(file.DirectoryName, name);
-                System.IO.File.Move(file.FullName, newPath);
-                newEntry = directoryProvider.GetFile(newPath);
+                System.IO.File.Move(file.FullName, physicalTarget);
+                newEntry = directoryProvider.GetFile(physicalTarget);
             }
 
-            return newEntry;            
+            return newEntry;
         }
 
         public virtual bool AuthorizeUpload(string path, HttpPostedFileBase file)
