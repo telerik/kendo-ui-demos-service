@@ -335,7 +335,17 @@ namespace KendoCRUDService.Controllers
 
         public virtual bool AuthorizeUpload(string path, HttpPostedFileBase file)
         {
-            return CanAccess(path) && IsValidFile(file.FileName);
+            if (!CanAccess(path))
+            {
+                throw new DirectoryNotFoundException(String.Format("The specified path cannot be found - {0}", path));
+            }
+
+            if (!IsValidFile(file.FileName))
+            {
+                throw new InvalidDataException(String.Format("The type of file is not allowed. Only {0} extensions are allowed.", DefaultFilter));
+            }
+
+            return true;
         }
 
         private bool IsValidFile(string fileName)
