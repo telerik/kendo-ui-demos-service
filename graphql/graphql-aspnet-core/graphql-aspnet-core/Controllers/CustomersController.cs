@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using aspnetmvc_ajax_service.Data;
+using graphql_aspnet_core.Data;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNetCore.Mvc;
 
-namespace aspnetmvc_ajax_service.Controllers
+namespace graphql_aspnet_core.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class CustomersController : Controller
     {
-        private SampleEntitiesDataContext context;
+        private CustomersEntitiesDataContext context;
 
-        public CustomersController(SampleEntitiesDataContext context)
+        public CustomersController(CustomersEntitiesDataContext context)
         {
             this.context = context;
         }

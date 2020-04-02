@@ -10,6 +10,7 @@ using graphql_aspnet_core.Data.Contracts;
 using graphql_aspnet_core.Data.Repositories;
 using graphql_aspnet_core.Models.GraphQL;
 using graphql_aspnet_core.Models.GraphQL.Product;
+using System.Linq;
 
 namespace graphql_aspnet_core
 {
@@ -19,6 +20,12 @@ namespace graphql_aspnet_core
         {
             Configuration = configuration;
             WebRootPath = env.WebRootPath;
+            var context = new CustomersEntitiesDataContext();
+
+            if (context.Customers.Count() < 5000)
+            {
+                Seeder.Seed(context, 5000);
+            }
         }
 
         public static string WebRootPath
@@ -43,6 +50,8 @@ namespace graphql_aspnet_core
 
             // SampleEntities db context
             services.AddDbContext<SampleEntitiesDataContext>();
+            services.AddDbContext<CustomersEntitiesDataContext>();
+
 
             services.AddSingleton<IDocumentExecuter, DocumentExecuter>();
 

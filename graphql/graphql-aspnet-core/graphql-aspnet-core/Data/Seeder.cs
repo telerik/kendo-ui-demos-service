@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace aspnetmvc_ajax_service.Data
+namespace graphql_aspnet_core.Data
 {
     public static class Seeder
     {
-        public static void Seed(SampleEntitiesDataContext context, int count)
+        public static void Seed(CustomersEntitiesDataContext context, int count)
         {
             var addresses = context.Customers.Select(x => x.Address).ToList();
             var cities = context.Customers.Select(x => x.City).ToList();
@@ -22,11 +22,11 @@ namespace aspnetmvc_ajax_service.Data
 
             for (int i = 0; i < count; i++)
             {
-                context.Customers.Add(new Customer
+                context.Customers.Add(new graphql_aspnet_core.Data.Entities.Customer
                 {
                     Address = addresses[random.Next(0, addresses.Count - 1)],
                     City = cities[random.Next(0, cities.Count - 1)],
-                    CompanyName = companynames[random.Next(0, companynames.Count - 1)]+" " + cities[random.Next(0, cities.Count - 1)],
+                    CompanyName = companynames[random.Next(0, companynames.Count - 1)] + " " + cities[random.Next(0, cities.Count - 1)],
                     ContactName = contactnames[random.Next(0, contactnames.Count - 1)],
                     ContactTitle = contacttitles[random.Next(0, contacttitles.Count - 1)],
                     Country = countries[random.Next(0, countries.Count - 1)],

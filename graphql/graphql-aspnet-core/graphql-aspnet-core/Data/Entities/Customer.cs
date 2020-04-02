@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace aspnetmvc_ajax_service.Data
+namespace graphql_aspnet_core.Data.Entities
 {
     public class Customer
     {
