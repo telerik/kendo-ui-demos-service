@@ -250,7 +250,14 @@ namespace KendoCRUDService.Controllers
         {
             var tempName = entry.Name + entry.Extension;
             int sequence = 0;
-            var physicalTarget = Path.Combine(Server.MapPath(target), tempName);
+            var physicalTarget = NormalizePath(Path.Combine(target, tempName));
+
+            if (!Authorize(physicalTarget))
+            {
+                throw new HttpException(403, "Forbidden");
+            }
+
+            physicalTarget = Server.MapPath(physicalTarget);
 
             if (entry.IsDirectory)
             {
