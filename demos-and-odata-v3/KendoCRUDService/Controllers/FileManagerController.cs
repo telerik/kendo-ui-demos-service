@@ -14,7 +14,7 @@ namespace KendoCRUDService.Controllers
         private const string contentFolderRoot = "~/Content/";
         private const string prettyName = "Files/";
         private static readonly string[] foldersToCopy = new[] { "~/Content/filemanager/" };
-        private const string DefaultFilter = "*.txt,*.doc,*.docx,*.xls,*.xlsx,*.ppt,*.pptx,*.zip,*.rar,*.jpg,*.jpeg,*.gif,*.png";
+        private const string DefaultFilter = "*.txt,*.docx,*.xlsx,*.ppt,*.pptx,*.zip,*.rar,*.jpg,*.jpeg,*.gif,*.png";
 
         private readonly DirectoryProvider directoryProvider;
         private readonly ContentInitializer contentInitializer;
