@@ -24,7 +24,7 @@ namespace graphql_aspnet_core
 
             if (context.Customers.Count() < 5000)
             {
-                Seeder.Seed(context, 5000);
+                Seeder.Seed(context, 5000, WebRootPath);
             }
         }
 

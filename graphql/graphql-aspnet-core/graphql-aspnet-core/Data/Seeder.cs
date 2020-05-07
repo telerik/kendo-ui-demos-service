@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace graphql_aspnet_core.Data
 {
     public static class Seeder
     {
-        public static void Seed(CustomersEntitiesDataContext context, int count)
+        public static void Seed(CustomersEntitiesDataContext context, int count, string rootPath)
         {
             var addresses = context.Customers.Select(x => x.Address).ToList();
             var cities = context.Customers.Select(x => x.City).ToList();
@@ -19,13 +20,23 @@ namespace graphql_aspnet_core.Data
             var phones = context.Customers.Select(x => x.Phone).ToList();
             var postalcodes = context.Customers.Select(x => x.PostalCode).ToList();
             var random = new Random();
+            var lineOfText = "";
 
-            for (int i = 0; i < count; i++)
+            var filestream = new System.IO.FileStream(rootPath + "/cities.txt", System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
+            var file = new System.IO.StreamReader(filestream, System.Text.Encoding.ASCII, true, 128);
+            context.Database.ExecuteSqlCommand("delete from Customers");
+
+            while ((lineOfText = file.ReadLine()) != null)
+            {
+                cities.Add(lineOfText);
+            }
+
+            for (int i = 0; i < 50000; i++)
             {
                 context.Customers.Add(new graphql_aspnet_core.Data.Entities.Customer
                 {
                     Address = addresses[random.Next(0, addresses.Count - 1)],
-                    City = cities[random.Next(0, cities.Count - 1)],
+                    City = cities[random.Next(0, 1000)],
                     CompanyName = companynames[random.Next(0, companynames.Count - 1)] + " " + cities[random.Next(0, cities.Count - 1)],
                     ContactName = contactnames[random.Next(0, contactnames.Count - 1)],
                     ContactTitle = contacttitles[random.Next(0, contacttitles.Count - 1)],
@@ -36,6 +47,8 @@ namespace graphql_aspnet_core.Data
                     CustomerID = Seeder.RandomString(15, random)
                 });
             }
+
+ 
 
             context.SaveChanges();
         }
