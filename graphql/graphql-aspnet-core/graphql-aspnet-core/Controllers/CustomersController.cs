@@ -20,7 +20,7 @@ namespace graphql_aspnet_core.Controllers
             this.context = context;
         }
 
-        [HttpGet]
+        [AcceptVerbs("Get", "Post")]
         public IActionResult Get([DataSourceRequest]DataSourceRequest request)
         {
             return Json(this.context.Customers.ToDataSourceResult(request));
