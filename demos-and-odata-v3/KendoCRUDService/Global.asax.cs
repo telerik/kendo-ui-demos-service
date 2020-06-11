@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.SignalR;
 using System;
 using System.Linq;
+using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
@@ -18,10 +19,11 @@ namespace KendoCRUDService
 
         public static void RegisterRoutes(RouteCollection routes)
         {
-            routes.MapHubs(new HubConfiguration
-            {
-                EnableCrossDomain = true
-            });
+            // TODO: Must be updated
+            //routes.MapHubs(new HubConfiguration
+            //{
+            //    EnableCrossDomain = true
+            //});
 
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 

@@ -18,7 +18,7 @@ namespace KendoCRUDService.Controllers
         
         public JsonResult Update()
         {
-            var models = this.DeserializeObject<IEnumerable<ProductModel>>("models");
+            var models = this.DeserializeObject<List<ProductModel>>("models");
             if (models != null)
             {
                 ProductRepository.Update(models);
@@ -28,7 +28,7 @@ namespace KendoCRUDService.Controllers
         
         public ActionResult Destroy()
         {
-            var products = this.DeserializeObject<IEnumerable<ProductModel>>("models");
+            var products = this.DeserializeObject<List<ProductModel>>("models");
 
             if (products != null)
             {
@@ -39,7 +39,7 @@ namespace KendoCRUDService.Controllers
         
         public ActionResult Create()
         {
-            var products = this.DeserializeObject<IEnumerable<ProductModel>>("models");
+            var products = this.DeserializeObject<List<ProductModel>>("models");
             if (products != null)
             {
                 ProductRepository.Insert(products);
