@@ -35,6 +35,8 @@ using System.Xml.Serialization;
 [assembly: EdmRelationshipAttribute("SampleModel", "FK_Tasks_Tasks", "Task", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(KendoCRUDService.Models.EF.Task), "Task1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(KendoCRUDService.Models.EF.Task), true)]
 [assembly: EdmRelationshipAttribute("SampleModel", "FK_GanttTasks_GanttTasks", "GanttTask", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(KendoCRUDService.Models.EF.GanttTask), "GanttTask1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(KendoCRUDService.Models.EF.GanttTask), true)]
 [assembly: EdmRelationshipAttribute("SampleModel", "FK_EmployeeDirectory_EmployeeDirectory", "EmployeeDirectory", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(KendoCRUDService.Models.EF.EmployeeDirectory), "EmployeeDirectory1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(KendoCRUDService.Models.EF.EmployeeDirectory), true)]
+[assembly: EdmRelationshipAttribute("SampleModel", "FK__DetailPro__Categ__2DE6D218", "Category", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(KendoCRUDService.Models.EF.Category), "DetailProduct", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(KendoCRUDService.Models.EF.DetailProduct), true)]
+[assembly: EdmRelationshipAttribute("SampleModel", "FK__DetailPro__Count__2EDAF651", "Country", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(KendoCRUDService.Models.EF.Country), "DetailProduct", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(KendoCRUDService.Models.EF.DetailProduct), true)]
 
 #endregion
 
@@ -453,6 +455,38 @@ namespace KendoCRUDService.Models.EF
             }
         }
         private ObjectSet<OrgChartShape> _OrgChartShapes;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<Country> Countries
+        {
+            get
+            {
+                if ((_Countries == null))
+                {
+                    _Countries = base.CreateObjectSet<Country>("Countries");
+                }
+                return _Countries;
+            }
+        }
+        private ObjectSet<Country> _Countries;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<DetailProduct> DetailProducts
+        {
+            get
+            {
+                if ((_DetailProducts == null))
+                {
+                    _DetailProducts = base.CreateObjectSet<DetailProduct>("DetailProducts");
+                }
+                return _DetailProducts;
+            }
+        }
+        private ObjectSet<DetailProduct> _DetailProducts;
 
         #endregion
 
@@ -641,6 +675,22 @@ namespace KendoCRUDService.Models.EF
         {
             base.AddObject("OrgChartShapes", orgChartShape);
         }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the Countries EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToCountries(Country country)
+        {
+            base.AddObject("Countries", country);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the DetailProducts EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToDetailProducts(DetailProduct detailProduct)
+        {
+            base.AddObject("DetailProducts", detailProduct);
+        }
 
         #endregion
 
@@ -799,6 +849,163 @@ namespace KendoCRUDService.Models.EF
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Product>("SampleModel.FK_Products_Categories", "Products", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("SampleModel", "FK__DetailPro__Categ__2DE6D218", "DetailProduct")]
+        public EntityCollection<DetailProduct> DetailProducts
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<DetailProduct>("SampleModel.FK__DetailPro__Categ__2DE6D218", "DetailProduct");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<DetailProduct>("SampleModel.FK__DetailPro__Categ__2DE6D218", "DetailProduct", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="SampleModel", Name="Country")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class Country : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new Country object.
+        /// </summary>
+        /// <param name="countryID">Initial value of the CountryID property.</param>
+        /// <param name="countryNameShort">Initial value of the CountryNameShort property.</param>
+        /// <param name="countryNameLong">Initial value of the CountryNameLong property.</param>
+        public static Country CreateCountry(global::System.Byte countryID, global::System.String countryNameShort, global::System.String countryNameLong)
+        {
+            Country country = new Country();
+            country.CountryID = countryID;
+            country.CountryNameShort = countryNameShort;
+            country.CountryNameLong = countryNameLong;
+            return country;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Byte CountryID
+        {
+            get
+            {
+                return _CountryID;
+            }
+            set
+            {
+                if (_CountryID != value)
+                {
+                    OnCountryIDChanging(value);
+                    ReportPropertyChanging("CountryID");
+                    _CountryID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("CountryID");
+                    OnCountryIDChanged();
+                }
+            }
+        }
+        private global::System.Byte _CountryID;
+        partial void OnCountryIDChanging(global::System.Byte value);
+        partial void OnCountryIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String CountryNameShort
+        {
+            get
+            {
+                return _CountryNameShort;
+            }
+            set
+            {
+                OnCountryNameShortChanging(value);
+                ReportPropertyChanging("CountryNameShort");
+                _CountryNameShort = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("CountryNameShort");
+                OnCountryNameShortChanged();
+            }
+        }
+        private global::System.String _CountryNameShort;
+        partial void OnCountryNameShortChanging(global::System.String value);
+        partial void OnCountryNameShortChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String CountryNameLong
+        {
+            get
+            {
+                return _CountryNameLong;
+            }
+            set
+            {
+                OnCountryNameLongChanging(value);
+                ReportPropertyChanging("CountryNameLong");
+                _CountryNameLong = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("CountryNameLong");
+                OnCountryNameLongChanged();
+            }
+        }
+        private global::System.String _CountryNameLong;
+        partial void OnCountryNameLongChanging(global::System.String value);
+        partial void OnCountryNameLongChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("SampleModel", "FK__DetailPro__Count__2EDAF651", "DetailProduct")]
+        public EntityCollection<DetailProduct> DetailProducts
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<DetailProduct>("SampleModel.FK__DetailPro__Count__2EDAF651", "DetailProduct");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<DetailProduct>("SampleModel.FK__DetailPro__Count__2EDAF651", "DetailProduct", value);
                 }
             }
         }
@@ -1277,6 +1484,411 @@ namespace KendoCRUDService.Models.EF
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Customer>("SampleModel.CustomerCustomerDemo", "Customers", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="SampleModel", Name="DetailProduct")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class DetailProduct : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new DetailProduct object.
+        /// </summary>
+        /// <param name="productID">Initial value of the ProductID property.</param>
+        /// <param name="productName">Initial value of the ProductName property.</param>
+        /// <param name="discontinued">Initial value of the Discontinued property.</param>
+        public static DetailProduct CreateDetailProduct(global::System.Int32 productID, global::System.String productName, global::System.Boolean discontinued)
+        {
+            DetailProduct detailProduct = new DetailProduct();
+            detailProduct.ProductID = productID;
+            detailProduct.ProductName = productName;
+            detailProduct.Discontinued = discontinued;
+            return detailProduct;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 ProductID
+        {
+            get
+            {
+                return _ProductID;
+            }
+            set
+            {
+                if (_ProductID != value)
+                {
+                    OnProductIDChanging(value);
+                    ReportPropertyChanging("ProductID");
+                    _ProductID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("ProductID");
+                    OnProductIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _ProductID;
+        partial void OnProductIDChanging(global::System.Int32 value);
+        partial void OnProductIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String ProductName
+        {
+            get
+            {
+                return _ProductName;
+            }
+            set
+            {
+                OnProductNameChanging(value);
+                ReportPropertyChanging("ProductName");
+                _ProductName = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("ProductName");
+                OnProductNameChanged();
+            }
+        }
+        private global::System.String _ProductName;
+        partial void OnProductNameChanging(global::System.String value);
+        partial void OnProductNameChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Decimal> UnitPrice
+        {
+            get
+            {
+                return _UnitPrice;
+            }
+            set
+            {
+                OnUnitPriceChanging(value);
+                ReportPropertyChanging("UnitPrice");
+                _UnitPrice = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("UnitPrice");
+                OnUnitPriceChanged();
+            }
+        }
+        private Nullable<global::System.Decimal> _UnitPrice;
+        partial void OnUnitPriceChanging(Nullable<global::System.Decimal> value);
+        partial void OnUnitPriceChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int16> UnitsInStock
+        {
+            get
+            {
+                return _UnitsInStock;
+            }
+            set
+            {
+                OnUnitsInStockChanging(value);
+                ReportPropertyChanging("UnitsInStock");
+                _UnitsInStock = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("UnitsInStock");
+                OnUnitsInStockChanged();
+            }
+        }
+        private Nullable<global::System.Int16> _UnitsInStock;
+        partial void OnUnitsInStockChanging(Nullable<global::System.Int16> value);
+        partial void OnUnitsInStockChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String QuantityPerUnit
+        {
+            get
+            {
+                return _QuantityPerUnit;
+            }
+            set
+            {
+                OnQuantityPerUnitChanging(value);
+                ReportPropertyChanging("QuantityPerUnit");
+                _QuantityPerUnit = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("QuantityPerUnit");
+                OnQuantityPerUnitChanged();
+            }
+        }
+        private global::System.String _QuantityPerUnit;
+        partial void OnQuantityPerUnitChanging(global::System.String value);
+        partial void OnQuantityPerUnitChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Boolean Discontinued
+        {
+            get
+            {
+                return _Discontinued;
+            }
+            set
+            {
+                OnDiscontinuedChanging(value);
+                ReportPropertyChanging("Discontinued");
+                _Discontinued = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("Discontinued");
+                OnDiscontinuedChanged();
+            }
+        }
+        private global::System.Boolean _Discontinued;
+        partial void OnDiscontinuedChanging(global::System.Boolean value);
+        partial void OnDiscontinuedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> UnitsOnOrder
+        {
+            get
+            {
+                return _UnitsOnOrder;
+            }
+            set
+            {
+                OnUnitsOnOrderChanging(value);
+                ReportPropertyChanging("UnitsOnOrder");
+                _UnitsOnOrder = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("UnitsOnOrder");
+                OnUnitsOnOrderChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _UnitsOnOrder;
+        partial void OnUnitsOnOrderChanging(Nullable<global::System.Int32> value);
+        partial void OnUnitsOnOrderChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> CategoryID
+        {
+            get
+            {
+                return _CategoryID;
+            }
+            set
+            {
+                OnCategoryIDChanging(value);
+                ReportPropertyChanging("CategoryID");
+                _CategoryID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("CategoryID");
+                OnCategoryIDChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _CategoryID;
+        partial void OnCategoryIDChanging(Nullable<global::System.Int32> value);
+        partial void OnCategoryIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Byte> CountryID
+        {
+            get
+            {
+                return _CountryID;
+            }
+            set
+            {
+                OnCountryIDChanging(value);
+                ReportPropertyChanging("CountryID");
+                _CountryID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("CountryID");
+                OnCountryIDChanged();
+            }
+        }
+        private Nullable<global::System.Byte> _CountryID;
+        partial void OnCountryIDChanging(Nullable<global::System.Byte> value);
+        partial void OnCountryIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Byte> CustomerRating
+        {
+            get
+            {
+                return _CustomerRating;
+            }
+            set
+            {
+                OnCustomerRatingChanging(value);
+                ReportPropertyChanging("CustomerRating");
+                _CustomerRating = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("CustomerRating");
+                OnCustomerRatingChanged();
+            }
+        }
+        private Nullable<global::System.Byte> _CustomerRating;
+        partial void OnCustomerRatingChanging(Nullable<global::System.Byte> value);
+        partial void OnCustomerRatingChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> TargetSales
+        {
+            get
+            {
+                return _TargetSales;
+            }
+            set
+            {
+                OnTargetSalesChanging(value);
+                ReportPropertyChanging("TargetSales");
+                _TargetSales = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("TargetSales");
+                OnTargetSalesChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _TargetSales;
+        partial void OnTargetSalesChanging(Nullable<global::System.Int32> value);
+        partial void OnTargetSalesChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> LastSupply
+        {
+            get
+            {
+                return _LastSupply;
+            }
+            set
+            {
+                OnLastSupplyChanging(value);
+                ReportPropertyChanging("LastSupply");
+                _LastSupply = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("LastSupply");
+                OnLastSupplyChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _LastSupply;
+        partial void OnLastSupplyChanging(Nullable<global::System.DateTime> value);
+        partial void OnLastSupplyChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("SampleModel", "FK__DetailPro__Categ__2DE6D218", "Category")]
+        public Category Category
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Category>("SampleModel.FK__DetailPro__Categ__2DE6D218", "Category").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Category>("SampleModel.FK__DetailPro__Categ__2DE6D218", "Category").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Category> CategoryReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Category>("SampleModel.FK__DetailPro__Categ__2DE6D218", "Category");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Category>("SampleModel.FK__DetailPro__Categ__2DE6D218", "Category", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("SampleModel", "FK__DetailPro__Count__2EDAF651", "Country")]
+        public Country Country
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("SampleModel.FK__DetailPro__Count__2EDAF651", "Country").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("SampleModel.FK__DetailPro__Count__2EDAF651", "Country").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Country> CountryReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("SampleModel.FK__DetailPro__Count__2EDAF651", "Country");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Country>("SampleModel.FK__DetailPro__Count__2EDAF651", "Country", value);
                 }
             }
         }
