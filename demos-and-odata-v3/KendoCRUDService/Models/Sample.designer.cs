@@ -22,7 +22,7 @@ namespace KendoCRUDService.Models
 	using System;
 	
 	
-	[global::System.Data.Linq.Mapping.DatabaseAttribute(Name="TelerikDemosKendoSample")]
+	[global::System.Data.Linq.Mapping.DatabaseAttribute(Name="Sample")]
 	public partial class SampleDataContext : System.Data.Linq.DataContext
 	{
 		
@@ -57,7 +57,7 @@ namespace KendoCRUDService.Models
     #endregion
 		
 		public SampleDataContext() : 
-				base(global::System.Configuration.ConfigurationManager.ConnectionStrings["TelerikDemosKendoSampleConnectionString"].ConnectionString, mappingSource)
+				base(global::System.Configuration.ConfigurationManager.ConnectionStrings["SampleConnectionString"].ConnectionString, mappingSource)
 		{
 			OnCreated();
 		}
