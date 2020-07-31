@@ -156,6 +156,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\CountriesController.cs" />
+    <Compile Include="Controllers\DetailProductsController.cs" />
     <Compile Include="Controllers\DiagramShapesController.cs" />
     <Compile Include="Controllers\DiagramConnectionsController.cs" />
     <Compile Include="Controllers\EmployeeDirectoryController.cs" />
@@ -183,8 +185,14 @@
     <Compile Include="Common\JsonpResult.cs" />
     <Compile Include="Hubs\MeetingHub.cs" />
     <Compile Include="Hubs\ProductHub.cs" />
+    <Compile Include="Models\CategoryModel.cs" />
+    <Compile Include="Models\CountryModel.cs" />
     <Compile Include="Models\CustomerModel.cs" />
+    <Compile Include="Models\CountryRepository.cs" />
     <Compile Include="Models\CustomerRepository.cs" />
+    <Compile Include="Models\DetailProductModel.cs" />
+    <Compile Include="Models\DetailProductRepository.cs" />
+    <Compile Include="Models\DetailProductSubmitViewModel.cs" />
     <Compile Include="Models\Diagram\DiagramConnectionsRepository.cs" />
     <Compile Include="Models\Diagram\DiagramShapesRepository.cs" />
     <Compile Include="Models\EF\SampleEf.Designer.cs">
