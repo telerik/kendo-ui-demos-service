@@ -73,6 +73,6 @@ namespace KendoCRUDService.Models
                 TotalSales = value * 100;
             }
         }
-        public int? TotalSales { get; set; }
+        public int? TotalSales { get; private set; }
     }
 }

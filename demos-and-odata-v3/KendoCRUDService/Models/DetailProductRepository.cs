@@ -28,8 +28,7 @@ namespace KendoCRUDService.Models
                         CustomerRating = p.CustomerRating,
                         LastSupply = p.LastSupply,
                         QuantityPerUnit = p.QuantityPerUnit,
-                        TargetSales = p.TargetSales * 100,
-                        TotalSales = p.TargetSales,
+                        TargetSales = p.TargetSales,
                         UnitsOnOrder = p.UnitsOnOrder
                     }).ToList();
             }
@@ -82,8 +81,7 @@ namespace KendoCRUDService.Models
                 target.CustomerRating = product.CustomerRating;
                 target.LastSupply = product.LastSupply;
                 target.QuantityPerUnit = product.QuantityPerUnit;
-                target.TargetSales = product.TargetSales * 100;
-                target.TotalSales = product.TargetSales;
+                target.TargetSales = product.TargetSales;
                 target.UnitsOnOrder = product.UnitsOnOrder;
             }
         }
