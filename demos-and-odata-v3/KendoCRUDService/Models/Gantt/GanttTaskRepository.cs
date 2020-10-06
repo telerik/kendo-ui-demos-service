@@ -69,6 +69,11 @@ namespace KendoCRUDService.Models
 
                 task.ID = id + 1;
 
+                if (task.ID == task.ParentID)
+                {
+                    throw new Exception("Parent task was not created!");
+                }
+
                 All().Insert(0, task);
             }
             else
