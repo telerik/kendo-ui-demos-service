@@ -22,6 +22,7 @@
       <Column Name="Description" Type="System.String" DbType="NText" CanBeNull="true" UpdateCheck="Never" />
       <Column Name="Picture" Type="System.Data.Linq.Binary" DbType="Image" CanBeNull="true" UpdateCheck="Never" />
       <Association Name="Category_Product" Member="Products" ThisKey="CategoryID" OtherKey="CategoryID" Type="Product" />
+      <Association Name="Category_DetailProduct" Member="DetailProducts" ThisKey="CategoryID" OtherKey="CategoryID" Type="DetailProduct" />
     </Type>
   </Table>
   <Table Name="dbo.Employees" Member="Employees">
@@ -110,6 +111,32 @@
       <Column Name="ShipCountry" Type="System.String" DbType="NVarChar(15)" CanBeNull="true" />
       <Association Name="Customer_Order" Member="Customer" ThisKey="CustomerID" OtherKey="CustomerID" Type="Customer" IsForeignKey="true" />
       <Association Name="Employee_Order" Member="Employee" ThisKey="EmployeeID" OtherKey="EmployeeID" Type="Employee" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Countries" Member="Countries">
+    <Type Name="Country">
+      <Column Name="CountryID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="CountryNameShort" Type="System.String" DbType="NVarChar(3) NOT NULL" CanBeNull="false" />
+      <Column Name="CountryNameLong" Type="System.String" DbType="NVarChar(40) NOT NULL" CanBeNull="false" />
+      <Association Name="Country_DetailProduct" Member="DetailProducts" ThisKey="CountryID" OtherKey="CountryID" Type="DetailProduct" />
+    </Type>
+  </Table>
+  <Table Name="dbo.DetailProducts" Member="DetailProducts">
+    <Type Name="DetailProduct">
+      <Column Name="ProductID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="ProductName" Type="System.String" DbType="NVarChar(40) NOT NULL" CanBeNull="false" />
+      <Column Name="UnitPrice" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
+      <Column Name="UnitsInStock" Type="System.Int16" DbType="SmallInt" CanBeNull="true" />
+      <Column Name="QuantityPerUnit" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="Discontinued" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Column Name="UnitsOnOrder" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CategoryID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CountryID" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="CustomerRating" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="TargetSales" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="LastSupply" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Association Name="Category_DetailProduct" Member="Category" ThisKey="CategoryID" OtherKey="CategoryID" Type="Category" IsForeignKey="true" />
+      <Association Name="Country_DetailProduct" Member="Country" ThisKey="CountryID" OtherKey="CountryID" Type="Country" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>
