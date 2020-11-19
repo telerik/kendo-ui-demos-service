@@ -19,12 +19,6 @@ namespace KendoCRUDService
 
         public static void RegisterRoutes(RouteCollection routes)
         {
-            // TODO: Must be updated
-            //routes.MapHubs(new HubConfiguration
-            //{
-            //    EnableCrossDomain = true
-            //});
-
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
