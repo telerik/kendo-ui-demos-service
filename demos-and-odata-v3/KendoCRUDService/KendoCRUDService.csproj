@@ -276,7 +276,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\" />
-    <Folder Include="Views\HierarchicalMeetings\" />
   </ItemGroup>
   <ItemGroup>
     <EntityDeploy Include="Models\EF\SampleEf.edmx">
