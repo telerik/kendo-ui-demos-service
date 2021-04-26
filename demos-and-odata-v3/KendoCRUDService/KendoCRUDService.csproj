@@ -183,6 +183,7 @@
     <Compile Include="Controllers\ProductsController.cs" />
     <Compile Include="Controllers\RedditImagesController.cs" />
     <Compile Include="Controllers\StockDataController.cs" />
+    <Compile Include="Controllers\TaskBoardController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Controllers\TwitterController.cs" />
     <Compile Include="Controllers\WeatherController.cs" />
@@ -247,6 +248,8 @@
     <Compile Include="Models\StockData\BaseUnit.cs" />
     <Compile Include="Models\StockData\DataFilter.cs" />
     <Compile Include="Models\StockData\StockDataPoint.cs" />
+    <Compile Include="Models\TaskBoard\ColumnModel.cs" />
+    <Compile Include="Models\TaskBoard\CardModel.cs" />
     <Compile Include="Models\TreeList\EmployeeDirectoryModel.cs" />
     <Compile Include="Models\TreeList\EmployeeDrirectoryRepository.cs" />
     <Compile Include="Models\Weather\WeatherRepository.cs" />
