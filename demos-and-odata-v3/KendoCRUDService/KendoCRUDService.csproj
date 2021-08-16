@@ -167,6 +167,7 @@
     <Compile Include="Controllers\DiagramShapesController.cs" />
     <Compile Include="Controllers\DiagramConnectionsController.cs" />
     <Compile Include="Controllers\EmployeeDirectoryController.cs" />
+    <Compile Include="Controllers\EmployeesOrgChartController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
     <Compile Include="Controllers\FileManagerController.cs" />
     <Compile Include="Controllers\FileBrowserController.cs" />
@@ -194,6 +195,7 @@
     <Compile Include="Hubs\MeetingHub.cs" />
     <Compile Include="Hubs\ProductHub.cs" />
     <Compile Include="Models\CategoryModel.cs" />
+    <Compile Include="Models\EmployeeNodeModel.cs" />
     <Compile Include="Models\CountryModel.cs" />
     <Compile Include="Models\CustomerModel.cs" />
     <Compile Include="Models\CountryRepository.cs" />
