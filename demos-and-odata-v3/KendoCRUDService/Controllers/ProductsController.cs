@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using KendoCRUDService.Models;
 using KendoCRUDService.Common;
-using System.Web.Script.Serialization;
+using KendoCRUDService.Models.Response;
+using System.Collections;
+using KendoCRUDService.Models.Request;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace KendoCRUDService.Controllers
 {
@@ -76,6 +79,56 @@ namespace KendoCRUDService.Controllers
             }
 
             return this.Jsonp(model);
+        }
+
+        [HttpPost]
+        public ActionResult ServerRead()
+        {
+            Stream requestBody = Request.InputStream;
+            requestBody.Seek(0, System.IO.SeekOrigin.Begin);
+            string requestString = new StreamReader(requestBody).ReadToEnd();
+
+            Request request = JsonConvert.DeserializeObject<Request>(requestString);
+            IQueryable<ProductModel> data = ProductRepository.All().AsQueryable();
+
+            int total;
+            bool isGrouped = false;
+            IList resultData;
+            IList pagedData;
+            var aggregates = new Dictionary<string, Dictionary<string, string>>();
+
+            if (request.Sorts != null)
+            {
+                data = data.Sort(request.Sorts);
+            }
+
+            if (request.Filter != null)
+            {
+                data = data.Filter(request.Filter);
+            }
+
+            resultData = data.ToList();
+
+            if (request.Aggregates != null)
+            {
+                aggregates = AggregateExtension.CalculateAggregates(request.Aggregates, resultData);
+            }
+
+            if (request.Groups != null && request.Groups.Count > 0)
+            {
+                resultData = GroupingExtension.ApplyGrouping<ProductModel>(resultData, request.Groups);
+                pagedData = PagingExtension.ApplyPaging<Group>(request.Skip, request.Take, resultData);
+                isGrouped = true;
+            }
+            else
+            {
+                pagedData = PagingExtension.ApplyPaging<ProductModel>(request.Skip, request.Take, resultData);
+            }
+
+            total = resultData.Count;
+            var result = new Response(pagedData, aggregates, total, isGrouped).ToResult();
+
+            return Content(JsonConvert.SerializeObject(result), "application/json");
         }
     }
 }

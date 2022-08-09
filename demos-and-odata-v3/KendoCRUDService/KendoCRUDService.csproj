@@ -162,6 +162,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\AggregateExtension.cs" />
+    <Compile Include="Common\CommonExtension.cs" />
+    <Compile Include="Common\ExpressionExtension.cs" />
+    <Compile Include="Common\FilteringExtension.cs" />
+    <Compile Include="Common\GroupingExtension.cs" />
+    <Compile Include="Common\PagingExtension.cs" />
+    <Compile Include="Common\SortingExtension.cs" />
     <Compile Include="Controllers\CountriesController.cs" />
     <Compile Include="Controllers\DetailProductsController.cs" />
     <Compile Include="Controllers\DiagramShapesController.cs" />
@@ -232,6 +239,13 @@
     <Compile Include="Models\Gantt\GanttTaskRepository.cs" />
     <Compile Include="Models\OrderModel.cs" />
     <Compile Include="Models\OrderRepository.cs" />
+    <Compile Include="Models\Request\AggregateRequest.cs" />
+    <Compile Include="Models\Request\FilterRequest.cs" />
+    <Compile Include="Models\Request\GroupRequest.cs" />
+    <Compile Include="Models\Request\Request.cs" />
+    <Compile Include="Models\Request\SortRequest.cs" />
+    <Compile Include="Models\Response\Group.cs" />
+    <Compile Include="Models\Response\Response.cs" />
     <Compile Include="Models\Scheduler\MeetingSignalR.cs" />
     <Compile Include="Models\ProductSignalR.cs" />
     <Compile Include="Models\Sample.designer.cs">
@@ -329,7 +343,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>42471</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>https://localhost/kendo-ui-crud</IISUrl>
+          <IISUrl>https://localhost:44342/kendo-ui-crud</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
