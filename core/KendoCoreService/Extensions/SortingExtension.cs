@@ -17,9 +17,6 @@ namespace KendoCoreService.Extensions
 
             foreach (var sort in sorts)
             {
-                var propInfo = CommonExtension.GetPropertyInfo(typeof(T), sort.Field);
-                var expr = ExpressionExtension.BuildLambda(typeof(T), propInfo);
-
                 string methodName = string.Empty;
                 
                 if (isFirst)
@@ -32,10 +29,7 @@ namespace KendoCoreService.Extensions
                     methodName = sort.Dir == "asc" ? "ThenBy" : "ThenByDescending";
                 }
 
-                var method = typeof(Queryable).GetMethods().FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == 2);
-                var genericMethod = method.MakeGenericMethod(typeof(T), propInfo.PropertyType);
-
-                data = (IQueryable<T>)genericMethod.Invoke(null, new object[] { data, expr });
+                data = data.ApplySort(methodName, sort.Field);
             }
 
             return data;
@@ -43,10 +37,15 @@ namespace KendoCoreService.Extensions
 
         public static IQueryable<T> GroupSort<T>(this IQueryable<T> data, string dir)
         {
-            var propInfo = CommonExtension.GetPropertyInfo(typeof(T), "Key");
-            var expr = ExpressionExtension.BuildLambda(typeof(T), propInfo);
             var methodName = dir == "asc" ? "OrderBy" : "OrderByDescending";
 
+            return data.ApplySort(methodName, "Key");
+        }
+
+        private static IQueryable<T> ApplySort<T>(this IQueryable<T> data, string methodName, string field)
+        {
+            var propInfo = CommonExtension.GetPropertyInfo(typeof(T), field);
+            var expr = ExpressionExtension.BuildLambda(typeof(T), propInfo);
 
             var method = typeof(Queryable).GetMethods().FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == 2);
             var genericMethod = method.MakeGenericMethod(typeof(T), propInfo.PropertyType);
