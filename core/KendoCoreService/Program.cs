@@ -22,13 +22,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(options => {
-        options.WithOrigins("https://demos.telerik.com",
-                "https://runner.telerik.io",
-                "https://netcorerepl.telerik.com",
-                "https://docs.telerik.com");
+        
+        options.AllowAnyMethod();
         options.AllowAnyMethod();
         options.AllowAnyHeader();
-        options.AllowCredentials();
+        
     });
 });
 
