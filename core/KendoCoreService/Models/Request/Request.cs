@@ -12,6 +12,9 @@ namespace KendoCoreService.Models.Request
         [JsonProperty("take")]
         public int Take { get; set; }
 
+        [JsonProperty("groupPaging")]
+        public bool GroupPaging { get; set; }
+
         [JsonProperty("sort")]
         public List<Sort>? Sorts { get; set; }
 

@@ -19,7 +19,7 @@ namespace KendoCoreService.Repositories
 
             if (result == null)
             {
-                result = Enumerable.Range(1, 5000)
+                result = Enumerable.Range(1, 500)
                         .Select(i => new ProductModel()
                         {
                             ProductID = i,
