@@ -49,7 +49,7 @@ namespace KendoCoreService.Controllers
                 data = data.Page(request.Skip, request.Take);
             }
 
-            if (request.Groups != null && request.Groups.Count > 0)
+            if (request.Groups != null && request.Groups.Count > 0 && !request.GroupPaging)
             {
                 resultData = data.Group(request.Groups).Cast<Group>().ToList();
                 isGrouped = true;

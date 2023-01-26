@@ -5,6 +5,15 @@ using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(options => {
+        options.AllowAnyOrigin();
+        options.AllowAnyMethod();
+        options.AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
 
@@ -17,20 +26,6 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
-
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(options => {
-        options.WithOrigins("https://demos.telerik.com",
-                "https://runner.telerik.io",
-                "https://netcorerepl.telerik.com",
-                "https://docs.telerik.com");
-        options.AllowAnyMethod();
-        options.AllowAnyHeader();
-        options.AllowCredentials();
-    });
-});
 
 // DI Services
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
