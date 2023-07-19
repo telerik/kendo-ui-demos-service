@@ -1,7 +1,8 @@
-﻿using KendoCRUDService.Data.Models;
+﻿using kendo_northwind_pg.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Metrics;
 
-namespace KendoCRUDService.Data
+namespace kendo_northwind_pg.Data
 {
     public partial class DemoDbContext : DbContext
     {
@@ -33,25 +34,10 @@ namespace KendoCRUDService.Data
                 entity.HasIndex(e => e.CategoryName).HasDatabaseName("Categories_CategoryName");
 
                 entity.Property(e => e.CategoryName)
-                    .IsRequired()
+                .IsRequired()
                     .HasColumnType("NVARCHAR(15)");
             });
 
-
-            modelBuilder.Entity<Country>(entity =>
-            {
-                entity.ToTable("Countries");
-
-                entity.HasKey(e => e.CountryID);
-
-                entity.Property(e => e.CountryID)
-                    .HasColumnName("CountryID")
-                    .ValueGeneratedNever();
-
-                entity.Property(e => e.CountryNameLong).IsRequired();
-
-                entity.Property(e => e.CountryNameShort).IsRequired();
-            });
 
             modelBuilder.Entity<CustomerCustomerDemo>(entity =>
             {
@@ -135,109 +121,6 @@ namespace KendoCRUDService.Data
                 entity.Property(e => e.Region)
                     .HasColumnType("NVARCHAR(15)")
                     .HasDefaultValueSql("NULL");
-            });
-
-            modelBuilder.Entity<DetailProduct>(entity =>
-            {
-                entity.ToTable("DetailProducts");
-
-                entity.HasKey(e => e.ProductID);
-
-                entity.Property(e => e.ProductID)
-                    .HasColumnName("ProductID")
-                    .HasColumnType("int")
-                    .ValueGeneratedNever();
-
-                entity.Property(e => e.CategoryID)
-                    .HasColumnName("CategoryID")
-                    .HasColumnType("int");
-
-                entity.Property(e => e.CountryID)
-                    .HasColumnName("CountryID")
-                    .HasColumnType("tinyint");
-
-                entity.Property(e => e.CustomerRating).HasColumnType("tinyint");
-
-                entity.Property(e => e.Discontinued)
-                    .IsRequired()
-                    .HasColumnType("bit");
-
-                entity.Property(e => e.LastSupply).HasColumnType("DATETIME");
-
-                entity.Property(e => e.ProductName)
-                    .IsRequired()
-                    .HasColumnType("nvarchar(40)");
-
-                entity.Property(e => e.QuantityPerUnit).HasColumnType("nvarchar(20)");
-
-                entity.Property(e => e.TargetSales).HasColumnType("int");
-
-                entity.Property(e => e.UnitPrice).HasColumnType("decimal(5,2)");
-
-                entity.Property(e => e.UnitsInStock).HasColumnType("smallint");
-
-                entity.Property(e => e.UnitsOnOrder).HasColumnType("int");
-
-                entity.HasOne(d => d.Category)
-                    .WithMany(p => p.DetailProducts)
-                    .HasForeignKey(d => d.CategoryID);
-
-                entity.HasOne(d => d.Country)
-                    .WithMany(p => p.DetailProducts)
-                    .HasForeignKey(d => d.CountryID);
-            });
-
-            modelBuilder.Entity<EmployeeDirectory>(entity =>
-            {
-                entity.ToTable("EmployeeDirectory");
-
-                entity.HasKey(e => e.EmployeeID);
-
-                entity.Property(e => e.Address)
-                    .HasColumnType("VARCHAR(255)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.BirthDate)
-                    .HasColumnType("DATETIME")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.City)
-                    .HasColumnType("VARCHAR(255)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Country)
-                    .HasColumnType("VARCHAR(100)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Extension)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.FirstName)
-                    .HasColumnType("VARCHAR(255)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.HireDate)
-                    .HasColumnType("DATETIME")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.LastName)
-                    .HasColumnType("VARCHAR(255)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Phone)
-                    .HasColumnType("VARCHAR(100)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Position)
-                    .HasColumnType("NVARCHAR(255)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.ReportsTo)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.HasOne(d => d.ReportsToNavigation).WithMany(p => p.InverseReportsToNavigation).HasForeignKey(d => d.ReportsTo);
             });
 
             modelBuilder.Entity<EmployeeTerritory>(entity =>
@@ -326,143 +209,6 @@ namespace KendoCRUDService.Data
                     .HasDefaultValueSql("NULL");
 
                 entity.HasOne(d => d.ReportsToNavigation).WithMany(p => p.InverseReportsToNavigation).HasForeignKey(d => d.ReportsTo);
-            });
-
-            modelBuilder.Entity<GanttDependency>(entity =>
-            {
-                entity.ToTable("GanttDependencies");
-
-                entity.Property(e => e.PredecessorID).HasColumnType("INT");
-
-                entity.Property(e => e.SuccessorID).HasColumnType("INT");
-
-                entity.Property(e => e.Type).HasColumnType("INT");
-            });
-
-            modelBuilder.Entity<GanttResourceAssignment>(entity =>
-            {
-                entity.ToTable("GanttResourceAssignments");
-
-                entity.Property(e => e.ResourceID).HasColumnType("INT");
-
-                entity.Property(e => e.TaskID).HasColumnType("INT");
-
-                entity.Property(e => e.Units).HasColumnType("FLOAT(5,2)");
-            });
-
-            modelBuilder.Entity<GanttResource>(entity =>
-            {
-                entity.ToTable("GanttResources");
-
-                entity.Property(e => e.Color)
-                    .HasColumnType("CHAR(10)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnType("NVARCHAR(50)");
-            });
-
-            modelBuilder.Entity<GanttTask>(entity =>
-            {
-                entity.ToTable("GanttTasks");
-
-                entity.Property(e => e.End)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.Expanded)
-                    .IsRequired()
-                    .HasColumnType("BOOLEAN");
-
-                entity.Property(e => e.OrderID).HasColumnType("INT");
-
-                entity.Property(e => e.ParentID)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.PercentComplete).HasColumnType("FLOAT(5,2)");
-
-                entity.Property(e => e.Start)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.Summary)
-                    .IsRequired()
-                    .HasColumnType("BOOLEAN");
-
-                entity.Property(e => e.Title).IsRequired();
-
-                entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent).HasForeignKey(d => d.ParentID);
-            });
-
-            modelBuilder.Entity<Intraday>(entity =>
-            {
-                entity.ToTable("Intradays");
-
-                entity.HasIndex(e => e.Date).HasDatabaseName("IX_Intraday_Date");
-
-                entity.Property(e => e.Close).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Date)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.High).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Low).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Open).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Symbol)
-                    .IsRequired()
-                    .HasColumnType("VARCHAR(10)");
-
-                entity.Property(e => e.Volume).HasColumnType("INT");
-            });
-
-            modelBuilder.Entity<MeetingAttendee>(entity =>
-            {
-                entity.ToTable("MeetingAttendees");
-
-                entity.HasKey(e => new { e.MeetingID, e.AttendeeID });
-
-                entity.Property(e => e.MeetingID).HasColumnType("INT");
-
-                entity.Property(e => e.AttendeeID).HasColumnType("INT");
-
-                entity.HasOne(d => d.Meeting).WithMany(p => p.MeetingAttendees).HasForeignKey(d => d.MeetingID).OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<Meeting>(entity =>
-            {
-                entity.ToTable("Meetings");
-
-                entity.HasKey(e => e.MeetingID);
-
-                entity.Property(e => e.End)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.IsAllDay)
-                    .IsRequired()
-                    .HasColumnType("BOOLEAN");
-
-                entity.Property(e => e.RecurrenceID)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.RoomID)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Start)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.Title).IsRequired();
-
-                entity.HasOne(d => d.Recurrence).WithMany(p => p.InverseRecurrence).HasForeignKey(d => d.RecurrenceID);
             });
 
             modelBuilder.Entity<OrderDetail>(entity =>
@@ -573,48 +319,6 @@ namespace KendoCRUDService.Data
                 entity.HasOne(d => d.ShipViaNavigation).WithMany(p => p.Orders).HasForeignKey(d => d.ShipVia);
             });
 
-            modelBuilder.Entity<OrgChartConnection>(entity =>
-            {
-                entity.ToTable("OrgChartConnections");
-
-                entity.Property(e => e.FromPointX)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.FromPointY)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.FromShapeId)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.ToPointX)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.ToPointY)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.ToShapeId)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-            });
-
-            modelBuilder.Entity<OrgChartShape>(entity =>
-            {
-                entity.ToTable("OrgChartShapes");
-
-                entity.Property(e => e.Color)
-                    .HasColumnType("NVARCHAR(50)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.JobTitle)
-                    .HasColumnType("NVARCHAR(200)")
-                    .HasDefaultValueSql("NULL");
-            });
-
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.ToTable("Products");
@@ -695,31 +399,6 @@ namespace KendoCRUDService.Data
                     .HasDefaultValueSql("NULL");
             });
 
-            modelBuilder.Entity<Stock>(entity =>
-            {
-                entity.ToTable("Stocks");
-
-                entity.HasIndex(e => e.Date).HasDatabaseName("IX_Stock_Date");
-
-                entity.Property(e => e.Close).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Date)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.High).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Low).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Open).HasColumnType("FLOAT(9,3)");
-
-                entity.Property(e => e.Symbol)
-                    .IsRequired()
-                    .HasColumnType("VARCHAR(10)");
-
-                entity.Property(e => e.Volume).HasColumnType("INT");
-            });
-
             modelBuilder.Entity<Supplier>(entity =>
             {
                 entity.ToTable("Suppliers");
@@ -771,37 +450,6 @@ namespace KendoCRUDService.Data
                     .HasDefaultValueSql("NULL");
             });
 
-            modelBuilder.Entity<Models.Task>(entity =>
-            {
-                entity.ToTable("Tasks");
-
-                entity.HasKey(e => e.TaskID);
-
-                entity.Property(e => e.End)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.IsAllDay)
-                    .IsRequired()
-                    .HasColumnType("BOOLEAN");
-
-                entity.Property(e => e.OwnerID)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.RecurrenceID)
-                    .HasColumnType("INT")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Start)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.Title).IsRequired();
-
-                entity.HasOne(d => d.Recurrence).WithMany(p => p.InverseRecurrence).HasForeignKey(d => d.RecurrenceID);
-            });
-
             modelBuilder.Entity<Territory>(entity =>
             {
                 entity.ToTable("Territories");
@@ -818,134 +466,20 @@ namespace KendoCRUDService.Data
 
                 entity.HasOne(d => d.Region).WithMany(p => p.Territories).HasForeignKey(d => d.RegionID).OnDelete(DeleteBehavior.Restrict);
             });
-
-            modelBuilder.Entity<UrbanArea>(entity =>
-            {
-                entity.ToTable("UrbanAreas");
-
-                entity.Property(e => e.City)
-                    .IsRequired()
-                    .HasColumnType("NVARCHAR(256)");
-
-                entity.Property(e => e.Country)
-                    .IsRequired()
-                    .HasColumnType("NVARCHAR(256)");
-
-                entity.Property(e => e.Country_ISO3)
-                    .IsRequired()
-                    .HasColumnType("CHAR(3)");
-
-                entity.Property(e => e.Latitude).HasColumnType("FLOAT(9,6)");
-
-                entity.Property(e => e.Longitude).HasColumnType("FLOAT(9,6)");
-
-                entity.Property(e => e.Pop1950).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1955).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1960).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1965).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1970).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1975).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1980).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1985).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1990).HasColumnType("INT");
-
-                entity.Property(e => e.Pop1995).HasColumnType("INT");
-
-                entity.Property(e => e.Pop2000).HasColumnType("INT");
-
-                entity.Property(e => e.Pop2005).HasColumnType("INT");
-
-                entity.Property(e => e.Pop2010).HasColumnType("INT");
-
-                entity.Property(e => e.Pop2015).HasColumnType("INT");
-
-                entity.Property(e => e.Pop2020).HasColumnType("INT");
-
-                entity.Property(e => e.Pop2025).HasColumnType("INT");
-
-                entity.Property(e => e.Pop2050).HasColumnType("INT");
-            });
-
-            modelBuilder.Entity<Weather>(entity =>
-            {
-                entity.ToTable("Weather");
-
-                entity.HasKey(e => e.ID);
-
-                entity.Property(e => e.Station)
-                    .IsRequired()
-                    .HasColumnType("VARCHAR(255)");
-
-                entity.Property(e => e.Date)
-                    .IsRequired()
-                    .HasColumnType("DATETIME");
-
-                entity.Property(e => e.TMax)
-                    .IsRequired()
-                    .HasColumnType("FLOAT(5,2)");
-
-                entity.Property(e => e.TMin)
-                    .IsRequired()
-                    .HasColumnType("FLOAT(5,2)");
-
-                entity.Property(e => e.Wind)
-                    .IsRequired()
-                    .HasColumnType("FLOAT(5,2)");
-
-                entity.Property(e => e.Gust)
-                    .HasColumnType("FLOAT(5,2)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Rain)
-                    .IsRequired()
-                    .HasColumnType("FLOAT(5,2)");
-
-                entity.Property(e => e.Snow)
-                    .HasColumnType("FLOAT(5,2)")
-                    .HasDefaultValueSql("NULL");
-
-                entity.Property(e => e.Events)
-                    .HasColumnType("VARCHAR(255)")
-                    .HasDefaultValueSql("NULL");
-            });
         }
 
         public virtual DbSet<Category> Categories { get; set; }
-        public virtual DbSet<Country> Countries { get; set; }
         public virtual DbSet<CustomerCustomerDemo> CustomerCustomerDemo { get; set; }
         public virtual DbSet<CustomerDemographic> CustomerDemographics { get; set; }
         public virtual DbSet<Customer> Customers { get; set; }
-        public virtual DbSet<DetailProduct> DetailProducts { get; set; }
-        public virtual DbSet<EmployeeDirectory> EmployeeDirectories { get; set; }
         public virtual DbSet<EmployeeTerritory> EmployeeTerritories { get; set; }
         public virtual DbSet<Employee> Employees { get; set; }
-        public virtual DbSet<GanttDependency> GanttDependencies { get; set; }
-        public virtual DbSet<GanttResourceAssignment> GanttResourceAssignments { get; set; }
-        public virtual DbSet<GanttResource> GanttResources { get; set; }
-        public virtual DbSet<GanttTask> GanttTasks { get; set; }
-        public virtual DbSet<Intraday> Intradays { get; set; }
-        public virtual DbSet<MeetingAttendee> MeetingAttendees { get; set; }
-        public virtual DbSet<Meeting> Meetings { get; set; }
         public virtual DbSet<OrderDetail> OrderDetails { get; set; }
         public virtual DbSet<Order> Orders { get; set; }
-        public virtual DbSet<OrgChartConnection> OrgChartConnections { get; set; }
-        public virtual DbSet<OrgChartShape> OrgChartShapes { get; set; }
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<Region> Region { get; set; }
         public virtual DbSet<Shipper> Shippers { get; set; }
-        public virtual DbSet<Stock> Stocks { get; set; }
         public virtual DbSet<Supplier> Suppliers { get; set; }
-        public virtual DbSet<Models.Task> Tasks { get; set; }
-        public virtual DbSet<Territory> Territories { get; set; }        
-        public virtual DbSet<UrbanArea> UrbanAreas { get; set; }        
-        public virtual DbSet<Weather> Weather { get; set; }
+        public virtual DbSet<Territory> Territories { get; set; }
     }
 }
