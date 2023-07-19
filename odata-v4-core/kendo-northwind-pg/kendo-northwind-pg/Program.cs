@@ -33,6 +33,13 @@ var connection = new SqliteConnection(connectionString)
 };
 
 builder.Services.AddDbContext<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
+{
+    builder
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowAnyOrigin();
+}));
 
 var app = builder.Build();
 
@@ -46,7 +53,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseCors("CorsPolicy");
 app.UseRouting();
 
 app.UseAuthorization();
