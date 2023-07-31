@@ -76,7 +76,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Orders
         [HttpPost]
-        [Route("odata/[controller")]
+        [Route("odata/[controller]")]
         public IActionResult Post(Order order)
         {
             if (!ModelState.IsValid)
