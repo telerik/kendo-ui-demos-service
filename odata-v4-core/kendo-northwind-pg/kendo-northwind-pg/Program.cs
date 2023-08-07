@@ -1,11 +1,23 @@
 using kendo_northwind_pg.Data;
+using kendo_northwind_pg.Data.Models;
+using Microsoft.AspNetCore.OData;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews().AddSessionStateTempDataProvider();
+
+var edmModel = OdataModels.GetEdmModel();
+
+builder.Services.AddControllersWithViews()
+    .AddSessionStateTempDataProvider()
+    .AddOData(opt => opt.Select()
+                            .OrderBy()
+                            .Filter()
+                            .Count()
+                            .Expand()
+                            .AddRouteComponents("odata", edmModel)); 
 builder.Services.AddSession();
 
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "sample.db");
