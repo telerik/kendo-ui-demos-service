@@ -23,7 +23,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Order_Detail
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]")]
+        [Route("[controller]")]
         public IQueryable<OrderDetail> GetOrder_Detail()
         {
             return db.OrderDetails;
@@ -32,7 +32,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Order_Detail(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         public SingleResult<OrderDetail> GetOrder_Detail([FromODataUri] int key)
         {
             return SingleResult.Create(db.OrderDetails.Where(order_Detail => order_Detail.OrderID == key));
@@ -40,7 +40,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/Order_Detail(5)
         [HttpPut]
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         public IActionResult Put([FromODataUri] int key, OrderDetail order_Detail)
         {
             if (!ModelState.IsValid)
@@ -76,7 +76,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Order_Detail
         [HttpPost]
-        [Route("odata/[controller]")]
+        [Route("[controller]")]
         public IActionResult Post(OrderDetail order_Detail)
         {
             if (!ModelState.IsValid)
@@ -107,7 +107,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/Order_Detail(5)
         [AcceptVerbs("PATCH", "MERGE")]        
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         public IActionResult Patch([FromODataUri] int key, Delta<OrderDetail> patch)
         {
             if (!ModelState.IsValid)
@@ -144,7 +144,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/Order_Detail(5)
         [HttpDelete]
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             OrderDetail order_Detail = db.OrderDetails.Find(key);
@@ -162,7 +162,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Order_Detail(5)/Order
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})/Order")]
+        [Route("[controller]({key})/Order")]
         public SingleResult<Order> GetOrder([FromODataUri] int key)
         {
             return SingleResult.Create(db.OrderDetails.Where(m => m.OrderID == key).Select(m => m.Order));
@@ -171,7 +171,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Order_Detail(5)/Product
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})/Product")]
+        [Route("[controller]({key})/Product")]
         public SingleResult<Product> GetProduct([FromODataUri] int key)
         {
             return SingleResult.Create(db.OrderDetails.Where(m => m.OrderID == key).Select(m => m.Product));

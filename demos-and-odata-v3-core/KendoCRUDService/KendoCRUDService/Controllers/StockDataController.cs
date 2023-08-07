@@ -37,7 +37,7 @@ namespace KendoCRUDService.Controllers
                 }
 
                 var groupedData =
-                    from s in db.Intradays
+                    from s in db.Intradays.ToList()
                     where s.Date >= dateFrom && s.Date <= dateTo
                     group s by new
                     {
