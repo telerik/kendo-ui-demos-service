@@ -9,7 +9,10 @@ using KendoCRUDService.Data.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews().AddSessionStateTempDataProvider();
+builder.Services.AddControllersWithViews()
+    .AddSessionStateTempDataProvider()
+    .AddJsonOptions(options =>
+                options.JsonSerializerOptions.PropertyNamingPolicy = null);
 builder.Services.AddSession();
 
 if (builder.Environment.IsProduction())

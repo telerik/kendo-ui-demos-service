@@ -1,6 +1,7 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.DataAnnotations;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
@@ -23,23 +24,49 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Employees
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]")]
+        [Route("[controller]")]
         public IQueryable<Employee> GetEmployees()
         {
             return db.Employees;
         }
 
         [HttpGet]
-        [Route("odata/[controller]/Default.TopEmployees()")]
+        [EnableQuery]
+        [Route("odata/TopEmployees")]
         public IQueryable<Employee> TopEmployees()
         {
-            return db.Employees.Where(x => x.ReportsTo == null);
+            return db.Employees.Where(x => x.ReportsTo == null).Select(x=> new Employee
+            {
+                Address = x.Address,
+                BirthDate = x.BirthDate,
+                City = x.City,
+                Country = x.Country,
+                EmployeeID = x.EmployeeID,
+                EmployeeTerritories = x.EmployeeTerritories,
+                Extension = x.Extension,
+                FirstName = x.FirstName,
+                hasChildren = x.InverseReportsToNavigation.Any(),
+                HireDate = x.HireDate,
+                HomePhone = x.HomePhone,
+                ReportsTo = x.ReportsTo,
+                InverseReportsToNavigation = x.InverseReportsToNavigation,
+                LastName = x.LastName,
+                Notes = x.Notes,
+                Orders = x.Orders,
+                Photo = x.Photo, 
+                PhotoPath = x.PhotoPath,
+                PostalCode = x.PostalCode,
+                Region = x.Region,
+                ReportsToNavigation = x.ReportsToNavigation,
+                Title = x.Title,
+                TitleOfCourtesy = x.TitleOfCourtesy                
+            });
         }
 
         // GET: odata/Employees(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         public SingleResult<Employee> GetEmployee([FromODataUri] int key)
         {
             return SingleResult.Create(db.Employees.Where(employee => employee.EmployeeID == key));
@@ -47,7 +74,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/Employees(5)
         [HttpPut]
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         public IActionResult Put([FromODataUri] int key, Employee employee)
         {
             if (!ModelState.IsValid)
@@ -83,7 +110,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Employees
         [HttpPost]
-        [Route("odata/[controller]")]
+        [Route("[controller]")]
         public IActionResult Post(Employee employee)
         {
             if (!ModelState.IsValid)
@@ -98,7 +125,7 @@ namespace kendo_northwind_pg.Controllers
         }
 
         // PATCH: odata/Employees(5)
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         [AcceptVerbs("PATCH", "MERGE")]
         public IActionResult Patch([FromODataUri] int key, Delta<Employee> patch)
         {
@@ -136,7 +163,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/Employees(5)
         [HttpDelete]
-        [Route("odata/[controller]({key})")]
+        [Route("[controller]({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             Employee employee = db.Employees.Find(key);
@@ -151,42 +178,62 @@ namespace kendo_northwind_pg.Controllers
             return StatusCode(204);
         }
 
-        // GET: odata/Employees(5)/Subordinates
+        // GET: odata/Subordinates(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})/Subordinates")]
-        public IQueryable<Employee> GetSubordinates([FromODataUri] int key)
+        [Route("odata/EmployeeSubordinates({key})")]
+        public IEnumerable<Employee> GetSubordinates([FromODataUri] int key)
         {
-            var employees = db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.InverseReportsToNavigation);
-            foreach (var employee in employees)
+            return db.Employees.Where(x => x.ReportsTo == key).Select(x => new Employee
             {
-                employee.hasChildren = db.Employees.Where(s => s.ReportsTo == employee.EmployeeID).Count() > 0;
-            }
-            return employees;
+                Address = x.Address,
+                BirthDate = x.BirthDate,
+                City = x.City,
+                Country = x.Country,
+                EmployeeID = x.EmployeeID,
+                EmployeeTerritories = x.EmployeeTerritories,
+                Extension = x.Extension,
+                FirstName = x.FirstName,
+                hasChildren = x.InverseReportsToNavigation.Any(),
+                HireDate = x.HireDate,
+                HomePhone = x.HomePhone,
+                ReportsTo = x.ReportsTo,
+                InverseReportsToNavigation = x.InverseReportsToNavigation,
+                LastName = x.LastName,
+                Notes = x.Notes,
+                Orders = x.Orders,
+                Photo = x.Photo,
+                PhotoPath = x.PhotoPath,
+                PostalCode = x.PostalCode,
+                Region = x.Region,
+                ReportsToNavigation = x.ReportsToNavigation,
+                Title = x.Title,
+                TitleOfCourtesy = x.TitleOfCourtesy
+            });
         }
 
-        // GET: odata/Employees(5)/Employee1
+        // GET: odata/EmployeeManager(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})/Employee1")]
-        public SingleResult<Employee> GetEmployee1([FromODataUri] int key)
+        [Route("odata/EmployeeManager({key})")]
+        public SingleResult<Employee> GetManager([FromODataUri] int key)
         {
             return SingleResult.Create(db.Employees.Where(m => m.EmployeeID == key).Select(m => m.ReportsToNavigation));
         }
 
-        // GET: odata/Employees(5)/Orders
+        // GET: odata/EmployeeOrders(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})/Orders")]
+        [Route("odata/EmployeeOrders({key})")]
         public IQueryable<Order> GetOrders([FromODataUri] int key)
         {
             return db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.Orders);
         }
 
-        // GET: odata/Employees(5)/Territories
+        // GET: odata/EmployeeTerritories(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/[controller]({key})/Territories")]
+        [Route("odata/EmployeeTerritories({key})")]
         public IQueryable<Territory> GetTerritories([FromODataUri] int key)
         {
             return db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.EmployeeTerritories.Select(x=> x.Territory));
