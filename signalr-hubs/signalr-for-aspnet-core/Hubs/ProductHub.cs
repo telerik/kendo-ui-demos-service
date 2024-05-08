@@ -3,18 +3,19 @@ using signalr_for_aspnet_core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Task = System.Threading.Tasks.Task;
 
 namespace signalr_for_aspnet_core.Hubs;
 
-public class ProductHub : Hub
+public class ProductHub(SampleEntitiesDataContext context) : Hub
 {
-    public override System.Threading.Tasks.Task OnConnectedAsync()
+    public override Task OnConnectedAsync()
     {
         Groups.AddToGroupAsync(Context.ConnectionId, GetGroupName());
         return base.OnConnectedAsync();
     }
 
-    public override System.Threading.Tasks.Task OnDisconnectedAsync(Exception e)
+    public override Task OnDisconnectedAsync(Exception e)
     {
         Groups.RemoveFromGroupAsync(Context.ConnectionId, GetGroupName());
         return base.OnDisconnectedAsync(e);
@@ -22,8 +23,6 @@ public class ProductHub : Hub
 
     public IEnumerable<ProductSignalR> Read()
     {
-        using var context = new SampleEntitiesDataContext();
-
         var products = context.Products.Select(p => new ProductSignalR
         {
             ID = p.ProductID,
