@@ -1,16 +1,13 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 
 namespace signalr_for_aspnet_core.Models;
 
-public partial class SampleEntitiesDataContext() : DbContext(new DbContextOptions<SampleEntitiesDataContext>())
+public class SampleEntitiesDataContext(IWebHostEnvironment environment) : DbContext(new DbContextOptions<SampleEntitiesDataContext>())
 {
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-    {
-        var dataDirectory = Path.Combine(Startup.WebRootPath, "App_Data");
-
-        options.UseSqlite(@"Data Source=" + dataDirectory + System.IO.Path.DirectorySeparatorChar + @"sample.db;");
-    }
+    protected override void OnConfiguring(DbContextOptionsBuilder options) =>
+        options.UseSqlite($"Data Source={Path.Join(environment.WebRootPath, "App_Data", "sample.db")}");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
