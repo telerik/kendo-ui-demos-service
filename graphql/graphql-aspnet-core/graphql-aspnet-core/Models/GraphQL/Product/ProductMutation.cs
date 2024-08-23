@@ -1,4 +1,5 @@
-﻿using GraphQL.Types;
+﻿using GraphQL;
+using GraphQL.Types;
 using graphql_aspnet_core.Data.Contracts;
 
 namespace graphql_aspnet_core.Models.GraphQL

@@ -11,6 +11,7 @@ using graphql_aspnet_core.Data.Repositories;
 using graphql_aspnet_core.Models.GraphQL;
 using graphql_aspnet_core.Models.GraphQL.Product;
 using System.Linq;
+using GraphiQl;
 
 namespace graphql_aspnet_core
 {
@@ -43,8 +44,7 @@ namespace graphql_aspnet_core
                 builder
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowAnyOrigin()
-                    .AllowCredentials();
+                    .AllowAnyOrigin();
             }));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
@@ -63,14 +63,18 @@ namespace graphql_aspnet_core
             services.AddSingleton<ProductInputType>();
 
 
-            services.AddSingleton<ISchema>(new ProductsSchema(new FuncDependencyResolver(type => services.BuildServiceProvider().GetService(type))));
+            services.AddSingleton<ISchema>(new ProductsSchema(new FuncServiceProvider(type => services.BuildServiceProvider().GetService(type))));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            app.UseCors("CorsPolicy");           
-            app.UseMvc();
+            app.UseCors("CorsPolicy");
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}");
+            });
             app.UseGraphiQl();
         }
     }

@@ -17,7 +17,7 @@ namespace graphql_aspnet_core.Data
         {
             var dataDirectory = Path.Combine(Startup.WebRootPath, "App_Data");
 
-            options.UseSqlite(@"Data Source=" + dataDirectory + System.IO.Path.DirectorySeparatorChar + @"customers.db;", x => x.SuppressForeignKeyEnforcement());
+            options.UseSqlite(@"Data Source=" + dataDirectory + System.IO.Path.DirectorySeparatorChar + @"customers.db; Foreign Keys=False");
         }
         public virtual DbSet<graphql_aspnet_core.Data.Entities.Customer> Customers { get; set; }
     }

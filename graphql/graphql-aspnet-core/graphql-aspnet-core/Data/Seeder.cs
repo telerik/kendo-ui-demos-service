@@ -24,7 +24,7 @@ namespace graphql_aspnet_core.Data
 
             var filestream = new System.IO.FileStream(rootPath + "/cities.txt", System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
             var file = new System.IO.StreamReader(filestream, System.Text.Encoding.ASCII, true, 128);
-            context.Database.ExecuteSqlCommand("delete from Customers");
+            context.Database.ExecuteSqlRaw("delete from Customers");
 
             while ((lineOfText = file.ReadLine()) != null)
             {
