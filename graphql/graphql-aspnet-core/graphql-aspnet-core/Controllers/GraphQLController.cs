@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.SystemTextJson;
 using GraphQL.Types;
 using graphql_aspnet_core.Models.GraphQL;
 using Microsoft.AspNetCore.Mvc;
@@ -28,12 +29,12 @@ namespace graphql_aspnet_core.Controllers
                 throw new ArgumentNullException(nameof(query));
 
             }
-            var inputs = query.Variables.ToInputs();
+            var inputs = new GraphQLSerializer().Deserialize<Inputs>(query.Variables.ToString());
             var executionOptions = new ExecutionOptions
             {
                 Schema = _schema,
                 Query = query.Query,
-                Inputs = inputs
+                Variables = inputs
             };
 
             var result = await _documentExecuter.ExecuteAsync(executionOptions).ConfigureAwait(false);
