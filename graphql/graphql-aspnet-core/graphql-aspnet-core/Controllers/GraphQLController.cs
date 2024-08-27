@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using GraphQL;
-using GraphQL.SystemTextJson;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using graphql_aspnet_core.Models.GraphQL;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +15,13 @@ namespace graphql_aspnet_core.Controllers
 
         private readonly ISchema _schema;
 
-        public GraphQLController(ISchema schema, IDocumentExecuter documentExecuter)
+        private readonly IGraphQLSerializer _serializer;
+
+        public GraphQLController(ISchema schema, IDocumentExecuter documentExecuter, IGraphQLSerializer serializer)
         {
             _schema = schema;
             _documentExecuter = documentExecuter;
+            _serializer = serializer;
         }
 
         [HttpPost]
@@ -29,23 +31,16 @@ namespace graphql_aspnet_core.Controllers
                 throw new ArgumentNullException(nameof(query));
 
             }
-            var inputs = new GraphQLSerializer().Deserialize<Inputs>(query.Variables.ToString());
             var executionOptions = new ExecutionOptions
             {
                 Schema = _schema,
                 Query = query.Query,
-                Variables = inputs
+                Variables = query.Variables != null ? ((GraphQLSerializer)_serializer).Deserialize<Inputs>(query.Variables.ToString()) : null
             };
 
             var result = await _documentExecuter.ExecuteAsync(executionOptions).ConfigureAwait(false);
 
-
-            if (result.Errors?.Count > 0)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
+            return new GraphQLActionResult(result);
         }
     }
 }
