@@ -8,14 +8,12 @@ namespace graphql_aspnet_core.Models.GraphQL
     {
         public ProductQuery(IProductRepository productRepository)
         {
-            Field<ProductType>(
-                "product",
-                arguments: new QueryArguments(new QueryArgument<IntGraphType> { Name = "ProductID" }),
-                resolve: context => productRepository.GetAsync(context.GetArgument<int>("productID")));
+            Field<ProductType>("product")
+                .Argument<NonNullGraphType<IntGraphType>>("ProductID", "<Description goes here>")
+                .ResolveAsync(async ctx => await productRepository.GetAsync(ctx.GetArgument<int>("productID")));
 
-            Field<ListGraphType<ProductType>>(
-                "products",
-                resolve: context => productRepository.AllAsync());
+            Field<ListGraphType<ProductType>>("products")
+                .ResolveAsync(async context => await productRepository.AllAsync());
         }
     }
 }

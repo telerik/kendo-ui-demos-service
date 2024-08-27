@@ -11,7 +11,7 @@ using graphql_aspnet_core.Data.Repositories;
 using graphql_aspnet_core.Models.GraphQL;
 using graphql_aspnet_core.Models.GraphQL.Product;
 using System.Linq;
-using GraphiQl;
+using GraphQL.NewtonsoftJson;
 
 namespace graphql_aspnet_core
 {
@@ -47,13 +47,13 @@ namespace graphql_aspnet_core
                     .AllowAnyOrigin();
             }));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddControllers().AddNewtonsoftJson();
 
             // SampleEntities db context
             services.AddDbContext<SampleEntitiesDataContext>();
             services.AddDbContext<CustomersEntitiesDataContext>();
-
-
             services.AddSingleton<IDocumentExecuter, DocumentExecuter>();
+            services.AddSingleton<IGraphQLSerializer, GraphQLSerializer>();
 
             // Product
             services.AddTransient<IProductRepository, ProductRepository>();
@@ -61,7 +61,6 @@ namespace graphql_aspnet_core
             services.AddSingleton<ProductMutation>();
             services.AddSingleton<ProductType>();
             services.AddSingleton<ProductInputType>();
-
 
             services.AddSingleton<ISchema>(new ProductsSchema(new FuncServiceProvider(type => services.BuildServiceProvider().GetService(type))));
         }
@@ -75,7 +74,6 @@ namespace graphql_aspnet_core
             {
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}");
             });
-            app.UseGraphiQl();
         }
     }
 }
