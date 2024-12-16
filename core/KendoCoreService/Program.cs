@@ -1,6 +1,9 @@
+using Azure;
+using Azure.AI.OpenAI;
 using KendoCoreService.Interfaces;
 using KendoCoreService.Repositories;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.AI;
 using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +16,17 @@ builder.Services.AddCors(options =>
         options.AllowAnyHeader();
     });
 });
+
+builder.Services.AddSingleton(
+    new AzureOpenAIClient(
+        new Uri(builder.Configuration["AI:AzureOpenAI:Endpoint"] ??
+            throw new InvalidOperationException("The required AzureOpenAI endpoint was not configured for this application.")),
+        new AzureKeyCredential(builder.Configuration["AI:AzureOpenAI:Key"] ??
+            throw new InvalidOperationException("The required AzureOpenAI Key was not configured for this application."))
+    ));
+
+builder.Services.AddChatClient(services => services.GetRequiredService<AzureOpenAIClient>()
+    .AsChatClient(builder.Configuration["AI:AzureOpenAI:Chat:ModelId"] ?? "gpt-4o-mini"));
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
