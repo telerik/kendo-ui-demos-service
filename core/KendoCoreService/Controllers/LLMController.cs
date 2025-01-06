@@ -31,8 +31,7 @@ namespace KendoCoreService.Controllers
         }
 
         [HttpPost]
-        [RateLimit(10, 60)]
-        [RestrictDomain("telerik.com")]
+        [ServiceFilter(typeof(ApiKeyAuthFilter))]
         public async Task<IActionResult> AIChatCompletion([FromBody] IList<ChatMessage> messages)
         {
             var options = new ChatOptions

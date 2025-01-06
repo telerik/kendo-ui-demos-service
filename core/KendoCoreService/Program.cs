@@ -1,12 +1,16 @@
 using Azure;
 using Azure.AI.OpenAI;
+using KendoCoreService.Filters;
 using KendoCoreService.Interfaces;
 using KendoCoreService.Repositories;
+using KendoCoreService.Settings;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.AI;
 using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ApiKeySettings>(builder.Configuration.GetSection("ApiKeys"));
 
 builder.Services.AddCors(options =>
 {
@@ -44,7 +48,7 @@ builder.Services.AddHttpContextAccessor();
 // DI Services
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddSingleton<IProductRepository, ProductRepository>();
-
+builder.Services.AddScoped<ApiKeyAuthFilter>();
 
 var app = builder.Build();
 
