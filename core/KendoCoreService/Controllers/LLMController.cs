@@ -24,12 +24,6 @@ namespace KendoCoreService.Controllers
             _chatClient = chatClient;
         }
 
-        [HttpGet]
-        public IActionResult Index()
-        {
-            return Json(new { status = "ok" });
-        }
-
         [HttpPost]
         [ServiceFilter(typeof(ApiKeyAuthFilter))]
         public async Task<IActionResult> AIChatCompletion([FromBody] IList<ChatMessage> messages)
