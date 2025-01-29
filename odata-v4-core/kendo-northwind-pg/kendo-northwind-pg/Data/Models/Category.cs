@@ -13,5 +13,6 @@
         public byte[] Picture { get; set; }
 
         public virtual ICollection<Product> Products { get; set; }
+        public virtual ICollection<DetailProduct> DetailProducts { get; set; } = new List<DetailProduct>();
     }
 }
