@@ -24,7 +24,7 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("[controller]")]
-        public IQueryable<Customer> GetCustomers()
+        public IQueryable<Customer> Get()
         {
             return db.Customers;
         }
