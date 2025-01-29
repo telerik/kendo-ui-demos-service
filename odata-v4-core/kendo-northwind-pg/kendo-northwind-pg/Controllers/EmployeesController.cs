@@ -25,7 +25,7 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("[controller]")]
-        public IQueryable<Employee> GetEmployees()
+        public IQueryable<Employee> Get()
         {
             return db.Employees;
         }
@@ -67,7 +67,7 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("[controller]({key})")]
-        public SingleResult<Employee> GetEmployee([FromODataUri] int key)
+        public SingleResult<Employee> Get([FromODataUri] int key)
         {
             return SingleResult.Create(db.Employees.Where(employee => employee.EmployeeID == key));
         }
