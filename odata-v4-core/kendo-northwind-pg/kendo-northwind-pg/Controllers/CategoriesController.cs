@@ -31,10 +31,10 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Categories(5)
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})")]
-        public SingleResult<Category> GetCategory([FromODataUri] int key)
+        [Route("odata/Categories({key})")]
+        public IQueryable<Category> GetCategory([FromODataUri] int key)
         {
-            return SingleResult.Create(_dbContext.Categories.Where(category => category.CategoryID == key));
+            return _dbContext.Categories.Where(category => category.CategoryID == key);
         }
 
         // PUT: odata/Categories(5)
@@ -147,10 +147,10 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Categories(5)/Products
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})/Products")]
+        [Route("odata/Categories({key})/Products")]
         public IQueryable<Product> GetProducts([FromODataUri] int key)
         {
-            return _dbContext.Categories.Where(m => m.CategoryID == key).SelectMany(m => m.Products);
+            return _dbContext.Categories.Where(m => m.CategoryID == key).SelectMany(m => m.Products).Include("OrderDetails");
 
         }
 
