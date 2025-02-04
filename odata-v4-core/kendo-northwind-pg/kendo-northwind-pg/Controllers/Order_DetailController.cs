@@ -24,7 +24,7 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("[controller]")]
-        public IQueryable<OrderDetail> GetOrder_Detail()
+        public IQueryable<OrderDetail> Get()
         {
             return db.OrderDetails;
         }
@@ -32,10 +32,10 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Order_Detail(5)
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})")]
-        public SingleResult<OrderDetail> GetOrder_Detail([FromODataUri] int key)
+        [Route("odata/Order_Detail({key})")]
+        public IQueryable<OrderDetail> GetOrder_Detail([FromODataUri] int key)
         {
-            return SingleResult.Create(db.OrderDetails.Where(order_Detail => order_Detail.OrderID == key));
+            return db.OrderDetails.Where(order_Detail => order_Detail.OrderID == key);
         }
 
         // PUT: odata/Order_Detail(5)
