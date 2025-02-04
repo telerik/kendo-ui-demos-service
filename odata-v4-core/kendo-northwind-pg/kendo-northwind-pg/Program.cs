@@ -1,6 +1,7 @@
 using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
 using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.OData.Batch;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,28 +10,33 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 var edmModel = OdataModels.GetEdmModel();
+var batchHandler = new DefaultODataBatchHandler();
+batchHandler.MessageQuotas.MaxNestingDepth = 2;
+batchHandler.MessageQuotas.MaxOperationsPerChangeset = 10;
+
 
 builder.Services.AddControllersWithViews()
     .AddSessionStateTempDataProvider()
     .AddOData(opt => opt.Select()
                             .OrderBy()
                             .SetMaxTop(1000)
+                            //.EnableQueryFeatures(1000)
                             .Filter()
                             .Count()
                             .Expand()
-                            .AddRouteComponents("odata", edmModel)); 
+                            .AddRouteComponents("odata", edmModel, batchHandler)); 
 builder.Services.AddSession();
 
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "sample.db");
 var tmpDbPath = Path.Combine("tmp", "demos-local.db");
 
-if (builder.Environment.IsProduction())
-{
+//if (builder.Environment.IsProduction())
+//{
     // In production, the SQLite DB is copied to a temp location to avoid locking issues.
     File.Delete(tmpDbPath);
     File.Copy(dbPath, tmpDbPath);
     dbPath = tmpDbPath;
-}
+//}
 
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
@@ -44,7 +50,6 @@ var connection = new SqliteConnection(connectionString)
 {
     DefaultTimeout = 120
 };
-
 builder.Services.AddDbContext<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
@@ -55,6 +60,7 @@ builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 }));
 
 var app = builder.Build();
+app.UseODataBatching();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

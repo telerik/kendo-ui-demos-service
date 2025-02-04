@@ -33,15 +33,15 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("[controller]({key})")]
-        public SingleResult<Product> GetProduct([FromODataUri] int key)
+        public IQueryable<Product> GetProduct([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Products.Where(product => product.ProductID == key));
+            return db.Products.Where(product => product.ProductID == key);
         }
 
         // PUT: odata/Products(5)
         [HttpPut]
-        [Route("[controller]({key})")]
-        public IActionResult Put([FromODataUri] int key, Product product)
+        [Route("odata/Products({key})")]
+        public IActionResult Put([FromODataUri] int key, [FromBody] Product product)
         {
             if (!ModelState.IsValid)
             {
@@ -76,8 +76,8 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Products
         [HttpPost]
-        [Route("[controller]")]
-        public IActionResult Post(Product product)
+        [Route("odata/Products")]
+        public IActionResult Post([FromBody] Product product)
         {
             if (!ModelState.IsValid)
             {
@@ -92,7 +92,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/Products(5)
         [AcceptVerbs("PATCH", "MERGE")]
-        [Route("[controller]({key})")]
+        [Route("odata/Products({key})")]
         public IActionResult Patch([FromODataUri] int key, Delta<Product> patch)
         {
             if (!ModelState.IsValid)
@@ -130,7 +130,7 @@ namespace kendo_northwind_pg.Controllers
         // DELETE: odata/Products(5)
 
         [HttpDelete]
-        [Route("[controller]({key})")]
+        [Route("odata/Products({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             Product product = db.Products.Find(key);
@@ -148,7 +148,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Products(5)/Category
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})/Category")]
+        [Route("odata/Products({key})/Category")]
         public SingleResult<Category> GetCategory([FromODataUri] int key)
         {
             return SingleResult.Create(db.Products.Where(m => m.ProductID == key).Select(m => m.Category));
@@ -157,7 +157,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Products(5)/Order_Details
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})/Order_Details")]
+        [Route("odata/Products({key})/Order_Details")]
         public IQueryable<OrderDetail> GetOrder_Details([FromODataUri] int key)
         {
             return db.Products.Where(m => m.ProductID == key).SelectMany(m => m.OrderDetails);
@@ -166,7 +166,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Products(5)/Supplier
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})/Supplier")]
+        [Route("odata/Products({key})/Supplier")]
         public SingleResult<Supplier> GetSupplier([FromODataUri] int key)
         {
             return SingleResult.Create(db.Products.Where(m => m.ProductID == key).Select(m => m.Supplier));
