@@ -30,13 +30,13 @@ builder.Services.AddSession();
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "sample.db");
 var tmpDbPath = Path.Combine("tmp", "demos-local.db");
 
-//if (builder.Environment.IsProduction())
-//{
-    // In production, the SQLite DB is copied to a temp location to avoid locking issues.
+if (builder.Environment.IsProduction())
+{
+    //In production, the SQLite DB is copied to a temp location to avoid locking issues.
     File.Delete(tmpDbPath);
     File.Copy(dbPath, tmpDbPath);
     dbPath = tmpDbPath;
-//}
+}
 
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
@@ -60,7 +60,6 @@ builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 }));
 
 var app = builder.Build();
-app.UseODataBatching();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -73,6 +72,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors("CorsPolicy");
+app.UseODataBatching();
 app.UseRouting();
 
 app.UseAuthorization();
