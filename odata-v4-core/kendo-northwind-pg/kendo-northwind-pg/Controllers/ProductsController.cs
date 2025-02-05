@@ -133,14 +133,21 @@ namespace kendo_northwind_pg.Controllers
         [Route("odata/Products({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            Product product = db.Products.Find(key);
-            if (product == null)
+            try
             {
-                return NotFound();
-            }
+                Product product = db.Products.Find(key);
+                if (product == null)
+                {
+                    return NotFound();
+                }
 
-            db.Products.Remove(product);
-            db.SaveChanges();
+                db.Products.Remove(product);
+                db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.InnerException.Message);
+            }
 
             return StatusCode(204);
         }
