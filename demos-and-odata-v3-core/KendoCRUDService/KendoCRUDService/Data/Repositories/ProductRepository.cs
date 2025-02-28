@@ -28,6 +28,11 @@ namespace KendoCRUDService.Data.Repositories
                         ProductName = p.ProductName,
                         UnitPrice = p.UnitPrice.GetValueOrDefault(),
                         UnitsInStock = p.UnitsInStock.GetValueOrDefault(),
+                        UnitsOnOrder = p.UnitsOnOrder.GetValueOrDefault(),
+                        CategoryID = p.CategoryID.GetValueOrDefault(),
+                        ReorderLevel = p.ReorderLevel.GetValueOrDefault(),
+                        SupplierID = p.SupplierID.GetValueOrDefault(),
+                        QuantityPerUnit = p.QuantityPerUnit,
                         Discontinued = p.Discontinued
                     }).ToList();
 
