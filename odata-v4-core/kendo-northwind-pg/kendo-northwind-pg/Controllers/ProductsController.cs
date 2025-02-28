@@ -1,5 +1,7 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
+using kendo_northwind_pg.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -7,35 +9,37 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using System.Net;
 
 namespace kendo_northwind_pg.Controllers
 {
     public class ProductsController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly ProductRepository _productRepository;
 
-        public ProductsController(DemoDbContext demoDbContext)
+        public ProductsController(ProductRepository productRepository)
         {
-            db = demoDbContext;
+            _productRepository = productRepository;
         }
+
 
         // GET: odata/Products
         [HttpGet]
         [EnableQuery]
         [Route("[controller]")]
-        public IQueryable<Product> GetProducts()
+        public IEnumerable<Product> GetProducts()
         {
-            return db.Products;
+            return _productRepository.All();
         }
 
         // GET: odata/Products(5)
         [HttpGet]
         [EnableQuery]
         [Route("[controller]({key})")]
-        public IQueryable<Product> GetProduct([FromODataUri] int key)
+        public IEnumerable<Product> GetProduct([FromODataUri] int key)
         {
-            return db.Products.Where(product => product.ProductID == key);
+            return _productRepository.Where(product => product.ProductID == key);
         }
 
         // PUT: odata/Products(5)
@@ -53,23 +57,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(product).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _productRepository.Update(product);
 
             return Updated(product);
         }
@@ -84,8 +72,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Products.Add(product);
-            db.SaveChanges();
+            _productRepository.Insert(product);
 
             return Created(product);
         }
@@ -100,29 +87,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Product product = db.Products.Find(key);
+            Product product = _productRepository.Where(x=>x.ProductID == key).First();
             if (product == null)
             {
                 return NotFound();
             }
 
             patch.Patch(product);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(product);
         }
@@ -133,21 +104,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("odata/Products({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            try
+            Product product = _productRepository.Where(x => x.ProductID == key).First();
+            if (product == null)
             {
-                Product product = db.Products.Find(key);
-                if (product == null)
-                {
-                    return NotFound();
-                }
+                return NotFound();
+            }
 
-                db.Products.Remove(product);
-                db.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.InnerException.Message);
-            }
+            _productRepository.Delete(product);
 
             return StatusCode(204);
         }
@@ -158,7 +121,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("odata/Products({key})/Category")]
         public SingleResult<Category> GetCategory([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Products.Where(m => m.ProductID == key).Select(m => m.Category));
+            return SingleResult.Create(_productRepository.Where(m => m.ProductID == key).Select(m => m.Category).AsQueryable());
         }
 
         // GET: odata/Products(5)/Order_Details
@@ -167,7 +130,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("odata/Products({key})/Order_Details")]
         public IQueryable<OrderDetail> GetOrder_Details([FromODataUri] int key)
         {
-            return db.Products.Where(m => m.ProductID == key).SelectMany(m => m.OrderDetails);
+            return _productRepository.Where(m => m.ProductID == key).SelectMany(m => m.OrderDetails).AsQueryable();
         }
 
         // GET: odata/Products(5)/Supplier
@@ -176,12 +139,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("odata/Products({key})/Supplier")]
         public SingleResult<Supplier> GetSupplier([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Products.Where(m => m.ProductID == key).Select(m => m.Supplier));
-        }
-
-        private bool ProductExists(int key)
-        {
-            return db.Products.Count(e => e.ProductID == key) > 0;
+            return SingleResult.Create(_productRepository.Where(m => m.ProductID == key).Select(m => m.Supplier).AsQueryable());
         }
     }
 }

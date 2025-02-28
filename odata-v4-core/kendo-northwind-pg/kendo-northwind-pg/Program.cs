@@ -1,9 +1,15 @@
+using kendo_northwind_pg;
+using kendo_northwind_pg.Controllers;
 using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Batch;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,9 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var edmModel = OdataModels.GetEdmModel();
 var batchHandler = new DefaultODataBatchHandler();
-batchHandler.MessageQuotas.MaxNestingDepth = 2;
-batchHandler.MessageQuotas.MaxOperationsPerChangeset = 10;
-
 
 builder.Services.AddControllersWithViews()
     .AddSessionStateTempDataProvider()
@@ -24,7 +27,7 @@ builder.Services.AddControllersWithViews()
                             .Filter()
                             .Count()
                             .Expand()
-                            .AddRouteComponents("odata", edmModel, batchHandler)); 
+                            .AddRouteComponents("odata", edmModel, batchHandler));
 builder.Services.AddSession();
 
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "sample.db");
@@ -41,7 +44,7 @@ if (builder.Environment.IsProduction())
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
     DataSource = dbPath,
-    Mode = SqliteOpenMode.ReadOnly,
+    Mode = SqliteOpenMode.ReadWriteCreate,
     Cache = SqliteCacheMode.Shared
 };
 
@@ -50,7 +53,11 @@ var connection = new SqliteConnection(connectionString)
 {
     DefaultTimeout = 120
 };
+
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddDbContext<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
     builder
@@ -58,7 +65,6 @@ builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
         .AllowAnyHeader()
         .AllowAnyOrigin();
 }));
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -69,12 +75,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseSession();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors("CorsPolicy");
 app.UseODataBatching();
 app.UseRouting();
-
+app.UseMiddleware<ODataBatchHttpContextMiddleware>();
 app.UseAuthorization();
 
 app.MapControllerRoute(
