@@ -20,8 +20,9 @@ namespace KendoCRUDService.Controllers
             return Json(_productRepository.All());
         }
 
-        public JsonResult Update(List<Product> models)
+        public JsonResult Update([FromBody]List<Product> models)
         {
+          
             if (models != null)
             {
                 _productRepository.Update(models);
@@ -29,7 +30,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Destroy(List<Product> models)
+        public ActionResult Destroy([FromBody]List<Product> models)
         {
             if (models != null)
             {
@@ -38,7 +39,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Create(List<Product> models)
+        public ActionResult Create([FromBody]List<Product> models)
         {
             if (models != null)
             {
