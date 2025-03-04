@@ -12,6 +12,11 @@ namespace KendoCRUDService.Controllers
             _orderRepository = orderRepository;
         }
 
+        public ActionResult Index()
+        {
+            return Json(_orderRepository.All());
+        }
+
         public ActionResult ValueMapper(int?[] values)
         {
             var indices = new List<int>();

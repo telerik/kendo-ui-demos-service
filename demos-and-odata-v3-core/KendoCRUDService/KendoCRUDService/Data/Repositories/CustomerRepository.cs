@@ -26,6 +26,15 @@ namespace KendoCRUDService.Data.Repositories
                     CustomerID = c.CustomerID,
                     ContactName = c.ContactName,
                     CompanyName = c.CompanyName,
+                    Address = c.Address,
+                    City = c.City,
+                    Country = c.Country,
+                    ContactTitle = c.ContactTitle,
+                    PostalCode = c.PostalCode,
+                    Bool = c.Bool,
+                    Fax = c.Fax,
+                    Phone = c.Phone,
+                    Region = c.Region
                 }).ToList();
             }
 

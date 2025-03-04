@@ -63,6 +63,7 @@ builder.Services.AddScoped<GanttTaskRepository>();
 builder.Services.AddScoped<MeetingsRepository>();
 builder.Services.AddScoped<OrderRepository>();
 builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<CategoriesRepository>();
 builder.Services.AddScoped<TasksRepository>();
 builder.Services.AddScoped<WeatherRepository>();
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>

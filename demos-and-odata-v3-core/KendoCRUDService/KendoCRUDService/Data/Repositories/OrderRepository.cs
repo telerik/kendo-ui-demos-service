@@ -26,7 +26,17 @@ namespace KendoCRUDService.Data.Repositories
                     OrderID = c.OrderID,
                     ShipName = c.ShipName,
                     ShipCity = c.ShipCity,
-                    ShipCountry = c.ShipCountry
+                    ShipCountry = c.ShipCountry,
+                    ShipAddress = c.ShipAddress,
+                    ShipPostalCode = c.ShipPostalCode,
+                    ShipRegion = c.ShipRegion,
+                    ShipVia = c.ShipVia,
+                    CustomerID = c.CustomerID,
+                    EmployeeID = c.EmployeeID,
+                    Freight = c.Freight,
+                    OrderDate = c.OrderDate,
+                    RequiredDate = c.RequiredDate,
+                    ShippedDate = c.ShippedDate
                 }).ToList();
 
                 _session.SetObjectAsJson("Orders", result);
