@@ -79,6 +79,11 @@ namespace KendoCRUDService.Data.Repositories
                 target.UnitPrice = product.UnitPrice;
                 target.UnitsInStock = product.UnitsInStock;
                 target.Discontinued = product.Discontinued;
+                target.QuantityPerUnit = product.QuantityPerUnit;
+                target.ReorderLevel = product.ReorderLevel;
+                target.SupplierID = product.SupplierID;
+                target.CategoryID = product.CategoryID;
+                target.UnitsOnOrder = product.UnitsOnOrder;
             }
         }
 
