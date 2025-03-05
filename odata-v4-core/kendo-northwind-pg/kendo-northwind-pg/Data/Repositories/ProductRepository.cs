@@ -22,7 +22,9 @@ namespace kendo_northwind_pg.Data.Repositories
             if (result == null)
             {
                 result =
-                    _contextFactory.Products.Select(p => new Product
+                    _contextFactory.Products
+                    .Include(p => p.OrderDetails)
+                    .ThenInclude(od => od.Order).Select(p => new Product
                     {
                         ProductID = p.ProductID,
                         ProductName = p.ProductName,
@@ -33,6 +35,7 @@ namespace kendo_northwind_pg.Data.Repositories
                         UnitsOnOrder = p.UnitsOnOrder.GetValueOrDefault(),
                         ReorderLevel = p.ReorderLevel.GetValueOrDefault(),
                         SupplierID = p.SupplierID.GetValueOrDefault(),
+                        OrderDetails = p.OrderDetails
                     }).ToList();
 
                 _session.SetObjectAsJson("Products", result);
