@@ -20,6 +20,7 @@ var batchHandler = new DefaultODataBatchHandler();
 
 builder.Services.AddControllersWithViews()
     .AddSessionStateTempDataProvider()
+    .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null)
     .AddOData(opt => opt.Select()
                             .OrderBy()
                             .SetMaxTop(1000)

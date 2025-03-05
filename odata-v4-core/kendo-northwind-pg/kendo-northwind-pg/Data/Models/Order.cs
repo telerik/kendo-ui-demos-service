@@ -1,4 +1,6 @@
-﻿namespace kendo_northwind_pg.Data.Models
+﻿using System.Text.Json.Serialization;
+
+namespace kendo_northwind_pg.Data.Models
 {
     public partial class Order
     {
@@ -22,6 +24,7 @@
         public string ShipRegion { get; set; }
         public int? ShipVia { get; set; }
 
+        [JsonIgnore]
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
         public virtual Customer Customer { get; set; }
         public virtual Employee Employee { get; set; }
