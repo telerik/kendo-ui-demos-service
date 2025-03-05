@@ -1,4 +1,6 @@
-﻿namespace kendo_northwind_pg.Data.Models
+﻿using System.Text.Json.Serialization;
+
+namespace kendo_northwind_pg.Data.Models
 {
     public partial class OrderDetail
     {
@@ -9,6 +11,7 @@
         public double UnitPrice { get; set; }
 
         public virtual Order Order { get; set; }
+        [JsonIgnore]
         public virtual Product Product { get; set; }
     }
 }

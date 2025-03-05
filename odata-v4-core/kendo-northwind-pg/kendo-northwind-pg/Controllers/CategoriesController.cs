@@ -22,7 +22,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Categories
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]")]
+        [Route("odata/Categories")]
         public IQueryable<Category> GetCategories()
         {
             return _dbContext.Categories;
@@ -39,7 +39,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/Categories(5)
         [HttpPut]
-        [Route("[controller]({key})")]
+        [Route("odata/Categories({key})")]
         public IActionResult Put([FromODataUri] int key, Category category)
         {
             if (!ModelState.IsValid)
@@ -75,7 +75,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Categories
         [HttpPost]
-        [Route("[controller]")]
+        [Route("odata/Categories")]
         public IActionResult Post(Category category)
         {
             if (!ModelState.IsValid)
@@ -92,7 +92,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/Categories(5)
         [AcceptVerbs("PATCH", "MERGE")]
-        [Route("[controller]")]
+        [Route("odata/Categories")]
         public IActionResult Patch([FromODataUri] int key, Delta<Category> patch)
         {
             if (!ModelState.IsValid)
@@ -129,7 +129,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/Categories(5)
         [HttpDelete]
-        [Route("[controller]({key})")]
+        [Route("odata/Categories({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             Category category = _dbContext.Categories.Find(key);
