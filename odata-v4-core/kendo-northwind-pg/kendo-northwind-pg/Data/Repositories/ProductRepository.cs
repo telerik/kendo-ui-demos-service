@@ -7,22 +7,24 @@ namespace kendo_northwind_pg.Data.Repositories
     public class ProductRepository
     {
         private readonly ISession _session;
-        private readonly DemoDbContext _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<Product> _products;
 
-        public ProductRepository(IHttpContextAccessor httpContextAccessor, DemoDbContext contextFactory)
+        public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<Product> All()
         {
-            var result = _session.GetObjectFromJson<IList<Product>>("Products"); //HttpContext.Current.Session["Products"] as IList<ProductModel>;
-
-            if (result == null)
+            if (_products == null)
             {
-                result =
-                    _contextFactory.Products
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _products =
+                    context.Products
                     .Include(p => p.OrderDetails)
                     .ThenInclude(od => od.Order).Select(p => new Product
                     {
@@ -37,11 +39,11 @@ namespace kendo_northwind_pg.Data.Repositories
                         SupplierID = p.SupplierID.GetValueOrDefault(),
                         OrderDetails = p.OrderDetails
                     }).ToList();
+                }
 
-                _session.SetObjectAsJson("Products", result);
             }
 
-            return result;
+            return _products;
         }
 
         public Product One(Func<Product, bool> predicate)
