@@ -18,7 +18,7 @@ namespace KendoCRUDService.Controllers
             return Json(_tasksRepository.All());
         }
 
-        public JsonResult Update(IEnumerable<TaskViewModel> models)
+        public JsonResult Update([FromBody] IEnumerable<TaskViewModel> models)
         {
             if (models != null)
             {
@@ -31,7 +31,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public JsonResult Destroy(IEnumerable<TaskViewModel> models)
+        public JsonResult Destroy([FromBody] IEnumerable<TaskViewModel> models)
         {
             if (models != null)
             {
@@ -44,7 +44,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public JsonResult Create(IEnumerable<TaskViewModel> models)
+        public JsonResult Create([FromBody] IEnumerable<TaskViewModel> models)
         {
             if (models != null)
             {

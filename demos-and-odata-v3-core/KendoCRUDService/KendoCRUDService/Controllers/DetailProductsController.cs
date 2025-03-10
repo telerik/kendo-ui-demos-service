@@ -18,7 +18,7 @@ namespace KendoCRUDService.Controllers
             return Json(_detailProductRepository.All());
         }
 
-        public JsonResult Update(IEnumerable<DetailProduct> models)
+        public JsonResult Update([FromBody] IEnumerable<DetailProduct> models)
         {
             if (models != null)
             {
@@ -27,7 +27,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Destroy(IEnumerable<DetailProduct> models)
+        public ActionResult Destroy([FromBody] IEnumerable<DetailProduct> models)
         {
             if (models != null)
             {
@@ -36,7 +36,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Create(IEnumerable<DetailProduct> models)
+        public ActionResult Create([FromBody] IEnumerable<DetailProduct> models)
         {
             if (models != null)
             {

@@ -19,7 +19,7 @@ namespace KendoCRUDService.Controllers
             return Json(_ganttTaskRepository.All());
         }
 
-        public JsonResult Update(IEnumerable<GanttTask> models)
+        public ActionResult Update([FromBody]IEnumerable<GanttTask> models)
         {
             if (models != null)
             {
@@ -28,7 +28,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Destroy(IEnumerable<GanttTask> models)
+        public ActionResult Destroy([FromBody]IEnumerable<GanttTask> models)
         {
             if (models != null)
             {
@@ -37,7 +37,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Create(IEnumerable<GanttTask> models)
+        public ActionResult Create([FromBody] IEnumerable<GanttTask> models)
         {
             if (models != null)
             {

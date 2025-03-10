@@ -38,7 +38,7 @@ namespace KendoCRUDService.Controllers
             );
         }
 
-        public JsonResult Update(IEnumerable<EmployeeDirectoryModel> models)
+        public JsonResult Update([FromBody] IEnumerable<EmployeeDirectoryModel> models)
         { 
             if (models != null)
             {
@@ -51,7 +51,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public JsonResult Destroy(IEnumerable<EmployeeDirectoryModel> models)
+        public JsonResult Destroy([FromBody] IEnumerable<EmployeeDirectoryModel> models)
         { 
             if (models != null)
             {
@@ -64,7 +64,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public JsonResult Create(IEnumerable<EmployeeDirectoryModel> models)
+        public JsonResult Create([FromBody] IEnumerable<EmployeeDirectoryModel> models)
         {
             if (models != null)
             {
