@@ -7,31 +7,28 @@ namespace KendoCRUDService.Data.Repositories
 
     public class DiagramConnectionsRepository
     {
-        private bool UpdateDatabase = false;
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<OrgChartConnection> _connetctions;
 
-        public DiagramConnectionsRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public DiagramConnectionsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<OrgChartConnection> All()
         {
-            var result = _session.GetObjectFromJson<IList<OrgChartConnection>>("OrgChartConnections");
-
-            if (result == null || UpdateDatabase)
+            if (_connetctions == null)
             {
-                using (var context = _contextFactory.CreateDbContext())
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    result = context.OrgChartConnections.ToList();
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _connetctions = context.OrgChartConnections.ToList();
                 }
-
-                _session.SetObjectAsJson("OrgChartConnections", result);
             }
 
-            return result;
+            return _connetctions;
         }
 
         public OrgChartConnection One(Func<OrgChartConnection, bool> predicate)
@@ -49,29 +46,18 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(OrgChartConnection connection)
         {
-            if (!UpdateDatabase)
+            var first = All().OrderByDescending(e => e.Id).FirstOrDefault();
+
+            long id = 0;
+
+            if (first != null)
             {
-                var first = All().OrderByDescending(e => e.Id).FirstOrDefault();
-
-                long id = 0;
-
-                if (first != null)
-                {
-                    id = first.Id;
-                }
-
-                connection.Id = id + 1;
-
-                All().Insert(0, connection);
+                id = first.Id;
             }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.OrgChartConnections.Add(connection);
-                    db.SaveChanges();
-                }
-            }
+
+            connection.Id = id + 1;
+
+            All().Insert(0, connection);
         }
 
         public void Update(IEnumerable<OrgChartConnection> connections)
@@ -84,27 +70,17 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Update(OrgChartConnection connection)
         {
-            if (!UpdateDatabase)
-            {
-                var target = One(e => e.Id == connection.Id);
+            var target = One(e => e.Id == connection.Id);
 
-                if (target != null)
-                {
-                    target.FromShapeId = connection.FromShapeId;
-                    target.ToShapeId = connection.ToShapeId;
-                    target.Text = connection.Text;
-                    target.FromPointX = connection.FromPointX;
-                    target.FromPointY = connection.FromPointY;
-                    target.ToPointX = connection.ToPointX;
-                    target.ToPointY = connection.ToPointY;
-                }
-            }
-            else
+            if (target != null)
             {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.OrgChartConnections.Entry(connection).State = EntityState.Modified;
-                }
+                target.FromShapeId = connection.FromShapeId;
+                target.ToShapeId = connection.ToShapeId;
+                target.Text = connection.Text;
+                target.FromPointX = connection.FromPointX;
+                target.FromPointY = connection.FromPointY;
+                target.ToPointX = connection.ToPointX;
+                target.ToPointY = connection.ToPointY;
             }
         }
 
@@ -118,22 +94,10 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Delete(OrgChartConnection connection)
         {
-            if (!UpdateDatabase)
+            var target = One(p => p.Id == connection.Id);
+            if (target != null)
             {
-                var target = One(p => p.Id == connection.Id);
-                if (target != null)
-                {
-                    All().Remove(target);
-                }
-            }
-            else
-            {
-                using (var db  = _contextFactory.CreateDbContext())
-                {
-                    db.OrgChartConnections.Remove(connection);
-
-                    db.SaveChanges();
-                }
+                All().Remove(target);
             }
         }
     }

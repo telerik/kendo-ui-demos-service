@@ -9,30 +9,28 @@ namespace KendoCRUDService.Data.Repositories
     {
         private bool UpdateDatabase = false;
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<GanttDependency> _dependencies;
 
-        public GanttDependencyRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public GanttDependencyRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
 
         public IList<GanttDependency> All()
         {
-            var result = _session.GetObjectFromJson<List<GanttDependency>>("GanttDependencies");
-
-            if (result == null || UpdateDatabase)
+            if (_dependencies == null)
             {
-                using (var context = _contextFactory.CreateDbContext())
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    result = context.GanttDependencies.ToList();
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _dependencies = context.GanttDependencies.ToList();
                 }
-
-                _session.SetObjectAsJson("GanttDependencies", result);
             }
 
-            return result;
+            return _dependencies;
         }
 
         public GanttDependency One(Func<GanttDependency, bool> predicate)
@@ -44,9 +42,7 @@ namespace KendoCRUDService.Data.Repositories
         {
             IList<GanttDependency> result;
 
-            using (var context = _contextFactory.CreateDbContext())
-            {
-                result = context.GanttDependencies.ToList()
+            result = All().ToList()
                     .Select(p => new GanttDependency
                     {
                         ID = p.ID,
@@ -55,7 +51,6 @@ namespace KendoCRUDService.Data.Repositories
                         Type = p.Type
                     })
                     .ToList();
-            }
 
             return result;
         }
@@ -70,30 +65,18 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(GanttDependency dependency)
         {
-            if (!UpdateDatabase)
+            var first = All().OrderByDescending(e => e.ID).FirstOrDefault();
+
+            var id = 0;
+
+            if (first != null)
             {
-                var first = All().OrderByDescending(e => e.ID).FirstOrDefault();
-
-                var id = 0;
-
-                if (first != null)
-                {
-                    id = first.ID;
-                }
-
-                dependency.ID = id + 1;
-
-                All().Insert(0, dependency);
+                id = first.ID;
             }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttDependencies.Add(dependency);
 
-                    db.SaveChanges();
-                }
-            }
+            dependency.ID = id + 1;
+
+            All().Insert(0, dependency);
         }
 
         public void Update(IEnumerable<GanttDependency> dependencies)
@@ -106,25 +89,13 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Update(GanttDependency dependency)
         {
-            if (!UpdateDatabase)
-            {
-                var target = One(e => e.ID == dependency.ID);
+            var target = One(e => e.ID == dependency.ID);
 
-                if (target != null)
-                {
-                    target.Type = dependency.Type;
-                    target.PredecessorID = dependency.PredecessorID;
-                    target.SuccessorID = dependency.SuccessorID;
-                }
-            }
-            else
+            if (target != null)
             {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttDependencies.Attach(dependency);
-
-                    db.SaveChanges();
-                }
+                target.Type = dependency.Type;
+                target.PredecessorID = dependency.PredecessorID;
+                target.SuccessorID = dependency.SuccessorID;
             }
         }
 
@@ -138,24 +109,10 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Delete(GanttDependency dependency)
         {
-            if (!UpdateDatabase)
+            var target = One(p => p.ID == dependency.ID);
+            if (target != null)
             {
-                var target = One(p => p.ID == dependency.ID);
-                if (target != null)
-                {
-                    All().Remove(target);
-                }
-            }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttDependencies.Attach(dependency);
-
-                    db.GanttDependencies.Remove(dependency);
-
-                    db.SaveChanges();
-                }
+                All().Remove(target);
             }
         }
     }

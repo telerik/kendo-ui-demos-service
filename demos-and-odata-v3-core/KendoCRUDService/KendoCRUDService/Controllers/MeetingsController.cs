@@ -18,7 +18,7 @@ namespace KendoCRUDService.Controllers
             return Json(_meetingsRepository.All());
         }
 
-        public JsonResult Update(IEnumerable<MeetingViewModel> models)
+        public JsonResult Update([FromBody] IEnumerable<MeetingViewModel> models)
         {
             if (models != null)
             {
@@ -31,7 +31,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public JsonResult Destroy(IEnumerable<MeetingViewModel> models)
+        public JsonResult Destroy([FromBody] IEnumerable<MeetingViewModel> models)
         {
             if (models != null)
             {
@@ -44,7 +44,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public JsonResult Create(IEnumerable<MeetingViewModel> models)
+        public JsonResult Create([FromBody] IEnumerable<MeetingViewModel> models)
         {
             if (models != null)
             {

@@ -9,23 +9,24 @@ namespace KendoCRUDService.Data.Repositories
         private static bool UpdateDatabase = false;
 
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<TaskViewModel> _tasks;
 
-        public TasksRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public TasksRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<TaskViewModel> All()
         {
-            var result = _session.GetObjectFromJson<IList<TaskViewModel>>("Tasks");
 
-            if (result == null || UpdateDatabase)
+            if (_tasks == null)
             {
-                using (var db = _contextFactory.CreateDbContext())
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    result = db.Tasks.ToList().Select(task => new TaskViewModel
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _tasks = context.Tasks.ToList().Select(task => new TaskViewModel
                     {
                         TaskID = task.TaskID,
                         Title = task.Title,
@@ -41,11 +42,9 @@ namespace KendoCRUDService.Data.Repositories
                         OwnerID = task.OwnerID
                     }).ToList();
                 }
-
-                _session.SetObjectAsJson("Tasks", result);
             }
 
-            return result;
+            return _tasks;
         }
 
         public TaskViewModel One(Func<TaskViewModel, bool> predicate)
@@ -55,100 +54,52 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(TaskViewModel task)
         {
-            if (!UpdateDatabase)
+            var first = All().OrderByDescending(e => e.TaskID).FirstOrDefault();
+
+            var id = 0;
+
+            if (first != null)
             {
-                var first = All().OrderByDescending(e => e.TaskID).FirstOrDefault();
-
-                var id = 0;
-
-                if (first != null)
-                {
-                    id = first.TaskID;
-                }
-
-                task.TaskID = id + 1;
-
-                All().Insert(0, task);
+                id = first.TaskID;
             }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    var entity = task.ToEntity();
 
-                    db.Tasks.Add(entity);
-                    db.SaveChanges();
+            task.TaskID = id + 1;
 
-                    task.TaskID = entity.TaskID;
-                }
-            }
+            All().Insert(0, task);
         }
 
         public void Update(TaskViewModel task)
         {
-            if (!UpdateDatabase)
-            {
-                var target = One(e => e.TaskID == task.TaskID);
+            var target = One(e => e.TaskID == task.TaskID);
 
-                if (target != null)
-                {
-                    target.Title = task.Title;
-                    target.Description = task.Description;
-                    target.IsAllDay = task.IsAllDay;
-                    target.RecurrenceRule = task.RecurrenceRule;
-                    target.RecurrenceException = task.RecurrenceException;
-                    target.RecurrenceID = task.RecurrenceID;
-                    target.OwnerID = task.OwnerID;
-                    target.StartTimezone = task.StartTimezone;
-                    target.EndTimezone = task.EndTimezone;
-                    target.Start = task.Start;
-                    target.End = task.End;
-                }
-            }
-            else
+            if (target != null)
             {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    var entity = task.ToEntity();
-                    db.Tasks.Attach(entity);
-                    db.SaveChanges();
-                }
+                target.Title = task.Title;
+                target.Description = task.Description;
+                target.IsAllDay = task.IsAllDay;
+                target.RecurrenceRule = task.RecurrenceRule;
+                target.RecurrenceException = task.RecurrenceException;
+                target.RecurrenceID = task.RecurrenceID;
+                target.OwnerID = task.OwnerID;
+                target.StartTimezone = task.StartTimezone;
+                target.EndTimezone = task.EndTimezone;
+                target.Start = task.Start;
+                target.End = task.End;
             }
         }
 
         public void Delete(TaskViewModel task)
         {
-            if (!UpdateDatabase)
+            var target = One(p => p.TaskID == task.TaskID);
+            if (target != null)
             {
-                var target = One(p => p.TaskID == task.TaskID);
-                if (target != null)
+                All().Remove(target);
+
+                var recurrenceExceptions = All().Where(m => m.RecurrenceID == task.TaskID).ToList();
+
+                foreach (var recurrenceException in recurrenceExceptions)
                 {
-                    All().Remove(target);
-
-                    var recurrenceExceptions = All().Where(m => m.RecurrenceID == task.TaskID).ToList();
-
-                    foreach (var recurrenceException in recurrenceExceptions)
-                    {
-                        All().Remove(recurrenceException);
-                    }
-                }
-            }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    var entity = task.ToEntity();
-                    db.Tasks.Attach(entity);
-
-                    var recurrenceExceptions = db.Tasks.Where(t => t.RecurrenceID == task.TaskID);
-
-                    foreach (var recurrenceException in recurrenceExceptions)
-                    {
-                        db.Tasks.Remove(recurrenceException);
-                    }
-
-                    db.Tasks.Remove(entity);
-                    db.SaveChanges();
+                    All().Remove(recurrenceException);
                 }
             }
         }

@@ -1,28 +1,30 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace KendoCRUDService.Data.Repositories
 {
     public class ProductRepository
     {
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<Product> _products;
 
-        public ProductRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<Product> All()
         {
-            var result = _session.GetObjectFromJson<IList<Product>>("Products"); //HttpContext.Current.Session["Products"] as IList<ProductModel>;
-
-            if (result == null)
+            if (_products == null)
             {
-                result =
-                    _contextFactory.CreateDbContext().Products.Select(p => new Product
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _products = context.Products.Select(p => new Product
                     {
                         ProductID = p.ProductID,
                         ProductName = p.ProductName,
@@ -35,11 +37,10 @@ namespace KendoCRUDService.Data.Repositories
                         QuantityPerUnit = p.QuantityPerUnit,
                         Discontinued = p.Discontinued
                     }).ToList();
-
-                _session.SetObjectAsJson("Products", result);
+                }
             }
 
-            return result;
+            return _products;
         }
 
         public Product One(Func<Product, bool> predicate)

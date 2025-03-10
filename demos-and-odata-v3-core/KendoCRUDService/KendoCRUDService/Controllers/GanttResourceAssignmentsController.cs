@@ -18,7 +18,7 @@ namespace KendoCRUDService.Controllers
             return Json(_ganttResourceAssignmentsRepository.All());
         }
 
-        public JsonResult Update(IEnumerable<GanttResourceAssignment> models)
+        public JsonResult Update([FromBody] IEnumerable<GanttResourceAssignment> models)
         {
             if (models != null)
             {
@@ -27,7 +27,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Destroy(IEnumerable<GanttResourceAssignment> models)
+        public ActionResult Destroy([FromBody] IEnumerable<GanttResourceAssignment> models)
         {
             if (models != null)
             {
@@ -36,7 +36,7 @@ namespace KendoCRUDService.Controllers
             return Json(models);
         }
 
-        public ActionResult Create(IEnumerable<GanttResourceAssignment> models)
+        public ActionResult Create([FromBody] IEnumerable<GanttResourceAssignment> models)
         {
             if (models != null)
             {
