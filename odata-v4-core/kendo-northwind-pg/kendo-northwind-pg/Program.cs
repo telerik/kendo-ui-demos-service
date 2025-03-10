@@ -42,6 +42,16 @@ if (builder.Environment.IsProduction())
     dbPath = tmpDbPath;
 }
 
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
     DataSource = dbPath,
@@ -54,11 +64,6 @@ var connection = new SqliteConnection(connectionString)
 {
     DefaultTimeout = 120
 };
-
-builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddDbContext<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
     builder
@@ -66,6 +71,11 @@ builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
         .AllowAnyHeader()
         .AllowAnyOrigin();
 }));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddDbContext<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+builder.Services.AddSingleton<ProductRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -82,6 +92,7 @@ app.UseStaticFiles();
 app.UseCors("CorsPolicy");
 app.UseODataBatching();
 app.UseRouting();
+app.UseSession();
 app.UseMiddleware<ODataBatchHttpContextMiddleware>();
 app.UseAuthorization();
 
