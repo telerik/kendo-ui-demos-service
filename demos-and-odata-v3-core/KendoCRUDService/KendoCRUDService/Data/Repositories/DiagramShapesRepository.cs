@@ -1,4 +1,5 @@
 ﻿using KendoCRUDService.Data.Models;
+using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,31 +7,29 @@ namespace KendoCRUDService.Data.Repositories
 {
     public class DiagramShapesRepository
     {
-        private static bool UpdateDatabase = false;
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<OrgChartShape> _shapes;
 
-        public DiagramShapesRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public DiagramShapesRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<OrgChartShape> All()
         {
-            var result = _session.GetObjectFromJson<IList<OrgChartShape>>("OrgChartShapes");
-
-            if (result == null || UpdateDatabase)
+            if (_shapes == null)
             {
-                using (var context = _contextFactory.CreateDbContext())
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    result = context.OrgChartShapes.ToList();
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _shapes = context.OrgChartShapes.ToList();
                 }
                 
-                _session.SetObjectAsJson("OrgChartShapes", result);
             }
 
-            return result;
+            return _shapes;
         }
 
         public OrgChartShape One(Func<OrgChartShape, bool> predicate)
@@ -48,29 +47,18 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(OrgChartShape shape)
         {
-            if (!UpdateDatabase)
+            var first = All().OrderByDescending(e => e.Id).FirstOrDefault();
+
+            var id = 0;
+
+            if (first != null)
             {
-                var first = All().OrderByDescending(e => e.Id).FirstOrDefault();
-
-                var id = 0;
-
-                if (first != null)
-                {
-                    id = first.Id;
-                }
-
-                shape.Id = id + 1;
-
-                All().Insert(0, shape);
+                id = first.Id;
             }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.OrgChartShapes.Add(shape);
-                    db.SaveChanges();
-                }
-            }
+
+            shape.Id = id + 1;
+
+            All().Insert(0, shape);
         }
 
         public void Update(IEnumerable<OrgChartShape> shapes)
@@ -83,23 +71,12 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Update(OrgChartShape shape)
         {
-            if (!UpdateDatabase)
-            {
-                var target = One(e => e.Id == shape.Id);
+            var target = One(e => e.Id == shape.Id);
 
-                if (target != null)
-                {
-                    target.JobTitle = shape.JobTitle;
-                    target.Color = shape.Color;
-                }
-            }
-            else
+            if (target != null)
             {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.OrgChartShapes.Attach(shape);
-                    db.SaveChanges();
-                }
+                target.JobTitle = shape.JobTitle;
+                target.Color = shape.Color;
             }
         }
 
@@ -113,21 +90,10 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Delete(OrgChartShape shape)
         {
-            if (!UpdateDatabase)
+            var target = One(p => p.Id == shape.Id);
+            if (target != null)
             {
-                var target = One(p => p.Id == shape.Id);
-                if (target != null)
-                {
-                    All().Remove(target);
-                }
-            }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.OrgChartShapes.Attach(shape);
-                    db.SaveChanges();
-                }
+                All().Remove(target);
             }
         }
     }

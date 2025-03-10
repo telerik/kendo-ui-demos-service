@@ -1,4 +1,5 @@
 ﻿using KendoCRUDService.Data.Models;
+using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,22 +8,23 @@ namespace KendoCRUDService.Data.Repositories
     public class DetailProductRepository
     {
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<DetailProduct> _detailProducts;
 
-        public DetailProductRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public DetailProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<DetailProduct> All()
         {
-            var result = _session.GetObjectFromJson<IList<DetailProduct>>("DetailProducts");
-
-            if (result == null)
+            if (_detailProducts == null)
             {
-                result =
-                    _contextFactory.CreateDbContext().DetailProducts.Select(p => new DetailProduct
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _detailProducts = context.DetailProducts.Select(p => new DetailProduct
                     {
                         ProductID = p.ProductID,
                         ProductName = p.ProductName,
@@ -39,11 +41,10 @@ namespace KendoCRUDService.Data.Repositories
                         TargetSales = p.TargetSales,
                         UnitsOnOrder = p.UnitsOnOrder
                     }).ToList();
-
-                _session.SetObjectAsJson("DetailProducts", result);
+                }
             }
 
-            return result;
+            return _detailProducts;
         }
 
         public DetailProduct One(Func<DetailProduct, bool> predicate)

@@ -13,7 +13,6 @@ builder.Services.AddControllersWithViews()
     .AddSessionStateTempDataProvider()
     .AddJsonOptions(options =>
                 options.JsonSerializerOptions.PropertyNamingPolicy = null);
-builder.Services.AddSession();
 
 if (builder.Environment.IsProduction())
 {
@@ -32,6 +31,25 @@ if (builder.Environment.IsProduction())
     dbPath = tmpDbPath;
 }
 
+builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
+{
+    builder
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowAnyOrigin();
+}));
+
+
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
     DataSource = dbPath,
@@ -44,35 +62,28 @@ var connection = new SqliteConnection(connectionString)
 {
     DefaultTimeout = 120
 };
-
-builder.Services.AddSignalR();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddSignalR();
 builder.Services.AddDbContextFactory<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
-builder.Services.AddScoped<CountryRepository>();
-builder.Services.AddScoped<CustomerRepository>();
-builder.Services.AddScoped<DetailProductRepository>();
-builder.Services.AddScoped<DiagramConnectionsRepository>();
-builder.Services.AddScoped<DiagramShapesRepository>();
-builder.Services.AddScoped<DirectoryRepository>(x => new DirectoryRepository(builder.Environment.ContentRootPath));
-builder.Services.AddScoped<EmployeeDirectoryRepository>();
-builder.Services.AddScoped<EmployeeRepository>();
-builder.Services.AddScoped<GanttDependencyRepository>();
-builder.Services.AddScoped<GanttResourceAssignmentsRepository>();
-builder.Services.AddScoped<GanttResourcesRepository>();
-builder.Services.AddScoped<GanttTaskRepository>();
-builder.Services.AddScoped<MeetingsRepository>();
-builder.Services.AddScoped<OrderRepository>();
-builder.Services.AddScoped<ProductRepository>();
-builder.Services.AddScoped<CategoriesRepository>();
-builder.Services.AddScoped<TasksRepository>();
-builder.Services.AddScoped<WeatherRepository>();
-builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
-{
-    builder
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowAnyOrigin();
-}));
+builder.Services.AddSingleton<CountryRepository>();
+builder.Services.AddSingleton<CustomerRepository>();
+builder.Services.AddSingleton<DetailProductRepository>();
+builder.Services.AddSingleton<DiagramConnectionsRepository>();
+builder.Services.AddSingleton<DiagramShapesRepository>();
+builder.Services.AddSingleton<DirectoryRepository>(x => new DirectoryRepository(builder.Environment.ContentRootPath));
+builder.Services.AddSingleton<EmployeeDirectoryRepository>();
+builder.Services.AddSingleton<EmployeeRepository>();
+builder.Services.AddSingleton<GanttDependencyRepository>();
+builder.Services.AddSingleton<GanttResourceAssignmentsRepository>();
+builder.Services.AddSingleton<GanttResourcesRepository>();
+builder.Services.AddSingleton<GanttTaskRepository>();
+builder.Services.AddSingleton<MeetingsRepository>();
+builder.Services.AddSingleton<OrderRepository>();
+builder.Services.AddSingleton<ProductRepository>();
+builder.Services.AddSingleton<CategoriesRepository>();
+builder.Services.AddSingleton<TasksRepository>();
+builder.Services.AddSingleton<WeatherRepository>();
 
 var app = builder.Build();
 
@@ -84,17 +95,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseSession();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
-app.UseAuthorization();
-
 app.UseCors("CorsPolicy");
-
 app.UseFileServer();
+app.UseSession();
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",

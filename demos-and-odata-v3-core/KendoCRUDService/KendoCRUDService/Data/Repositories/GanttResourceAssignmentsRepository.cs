@@ -1,4 +1,5 @@
 ﻿using KendoCRUDService.Data.Models;
+using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,29 +9,27 @@ namespace KendoCRUDService.Data.Repositories
     {
         private bool UpdateDatabase = false;
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<GanttResourceAssignment> _resourceAssignments;
 
-        public GanttResourceAssignmentsRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public GanttResourceAssignmentsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<GanttResourceAssignment> All()
         {
-            var result = _session.GetObjectFromJson<IList<GanttResourceAssignment>>("GanttAssignments");
-
-            if (result == null || UpdateDatabase)
+            if (_resourceAssignments == null)
             {
-                using (var context = _contextFactory.CreateDbContext())
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    result = context.GanttResourceAssignments.ToList();
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _resourceAssignments = context.GanttResourceAssignments.ToList();
                 }
-
-                _session.SetObjectAsJson("GanttAssignments", result);
             }
 
-            return result;
+            return _resourceAssignments;
         }
 
         public GanttResourceAssignment One(Func<GanttResourceAssignment, bool> predicate)
@@ -48,29 +47,17 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(GanttResourceAssignment assignment)
         {
-            if (!UpdateDatabase)
+            var first = All().OrderByDescending(a => a.ID).FirstOrDefault();
+            var id = 0;
+
+            if (first != null)
             {
-                var first = All().OrderByDescending(a => a.ID).FirstOrDefault();
-                var id = 0;
-
-                if (first != null)
-                {
-                    id = first.ID;
-                }
-
-                assignment.ID = id + 1;
-
-                All().Add(assignment);
+                id = first.ID;
             }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttResourceAssignments.Add(assignment);
 
-                    db.SaveChanges();
-                }
-            }
+            assignment.ID = id + 1;
+
+            All().Add(assignment);
         }
 
         public void Update(IEnumerable<GanttResourceAssignment> assigments)
@@ -83,23 +70,11 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Update(GanttResourceAssignment assigment)
         {
-            if (!UpdateDatabase)
-            {
-                var target = One(a => a.ID == assigment.ID);
+            var target = One(a => a.ID == assigment.ID);
 
-                if (target != null)
-                {
-                    target.Units = assigment.Units;
-                }
-            }
-            else
+            if (target != null)
             {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttResourceAssignments.Attach(assigment);
-
-                    db.SaveChanges();
-                }
+                target.Units = assigment.Units;
             }
         }
 
@@ -113,24 +88,10 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Delete(GanttResourceAssignment assigment)
         {
-            if (!UpdateDatabase)
+            var target = One(a => a.ID == assigment.ID);
+            if (target != null)
             {
-                var target = One(a => a.ID == assigment.ID);
-                if (target != null)
-                {
-                    All().Remove(target);
-                }
-            }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttResourceAssignments.Attach(assigment);
-
-                    db.GanttResourceAssignments.Remove(assigment);
-
-                    db.SaveChanges();
-                }
+                All().Remove(target);
             }
         }
     }

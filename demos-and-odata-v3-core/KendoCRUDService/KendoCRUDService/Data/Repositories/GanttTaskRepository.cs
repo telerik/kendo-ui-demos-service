@@ -6,37 +6,28 @@ namespace KendoCRUDService.Data.Repositories
 {
     public class GanttTaskRepository
     {
-        private bool UpdateDatabase = false;
-
         private readonly ISession _session;
-        private readonly IDbContextFactory<DemoDbContext> _contextFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IList<GanttTask> _tasks;
 
-        public GanttTaskRepository(IHttpContextAccessor httpContextAccessor, IDbContextFactory<DemoDbContext> contextFactory)
+        public GanttTaskRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
-            _contextFactory = contextFactory;
+            _scopeFactory = scopeFactory;
         }
 
         public IList<GanttTask> All()
         {
-            var result = _session.GetObjectFromJson<IList<GanttTask>>("GanttTasks");
-
-            if (result == null || UpdateDatabase)
+            if (_tasks == null)
             {
-                using (var context = _contextFactory.CreateDbContext())
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    result = context.GanttTasks.ToList();
+                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                    _tasks = context.GanttTasks.ToList();
                 }
-
-                _session.SetObjectAsJson("GanttTasks", result);
             }
 
-            return result;
-        }
-
-        public GanttTask One(Func<GanttTask, bool> predicate)
-        {
-            return All().FirstOrDefault(predicate);
+            return _tasks;
         }
 
         public void Insert(IEnumerable<GanttTask> tasks)
@@ -49,35 +40,23 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(GanttTask task)
         {
-            if (!UpdateDatabase)
-            {
-                var first = All().OrderByDescending(e => e.ID).FirstOrDefault();
+             var first = _tasks.OrderByDescending(e => e.ID).FirstOrDefault();
 
-                var id = 0;
+             var id = 0;
 
-                if (first != null)
-                {
-                    id = first.ID;
-                }
+             if (first != null)
+             {
+                 id = first.ID;
+             }
 
-                task.ID = id + 1;
+             task.ID = id + 1;
 
-                if (task.ID == task.ParentID)
-                {
-                    throw new Exception("Parent task was not created!");
-                }
+             if (task.ID == task.ParentID)
+             {
+                 throw new Exception("Parent task was not created!");
+             }
 
-                All().Insert(0, task);
-            }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttTasks.Add(task);
-
-                    db.SaveChanges();
-                }
-            }
+            _tasks.Insert(0, task);
         }
 
         public void Update(IEnumerable<GanttTask> tasks)
@@ -90,61 +69,36 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Update(GanttTask task)
         {
-            if (!UpdateDatabase)
-            {
-                var target = One(e => e.ID == task.ID);
+            var target = _tasks.FirstOrDefault(e => e.ID == task.ID);
 
-                if (target != null)
-                {
-                    target.Title = task.Title;
-                    target.Start = task.Start;
-                    target.End = task.End;
-                    target.PercentComplete = task.PercentComplete;
-                    target.OrderID = task.OrderID;
-                    target.ParentID = task.ParentID;
-                    target.Summary = task.Summary;
-                    target.Expanded = task.Expanded;
-                }
-            }
-            else
+            if (target != null)
             {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttTasks.Attach(task);
-
-                    db.SaveChanges();
-                }
+                target.Title = task.Title;
+                target.Start = task.Start;
+                target.End = task.End;
+                target.PercentComplete = task.PercentComplete;
+                target.OrderID = task.OrderID;
+                target.ParentID = task.ParentID;
+                target.Summary = task.Summary;
+                target.Expanded = task.Expanded;
             }
         }
 
         public void Delete(IEnumerable<GanttTask> tasks)
         {
+            IList<GanttTask> allTasks = All();
             foreach (var task in tasks)
             {
-                Delete(task);
+                Delete(allTasks);
             }
         }
 
         public void Delete(GanttTask task)
         {
-            if (!UpdateDatabase)
+            var target = _tasks.FirstOrDefault(p => p.ID == task.ID);
+            if (target != null)
             {
-                var target = One(p => p.ID == task.ID);
-                if (target != null)
-                {
-                    All().Remove(target);
-                }
-            }
-            else
-            {
-                using (var db = _contextFactory.CreateDbContext())
-                {
-                    db.GanttTasks.Attach(task);
-
-                    db.GanttTasks.Remove(task);
-
-                    db.SaveChanges();
-                }
+                _tasks.Remove(target);
             }
         }
     }
