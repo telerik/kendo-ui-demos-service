@@ -82,6 +82,7 @@ builder.Services.AddSingleton<MeetingsRepository>();
 builder.Services.AddSingleton<OrderRepository>();
 builder.Services.AddSingleton<ProductRepository>();
 builder.Services.AddSingleton<CategoriesRepository>();
+builder.Services.AddSingleton<TaskBoardRepository>();
 builder.Services.AddSingleton<TasksRepository>();
 builder.Services.AddSingleton<WeatherRepository>();
 
