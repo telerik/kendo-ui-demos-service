@@ -22,7 +22,6 @@ namespace KendoCRUDService.Controllers
 
         public JsonResult Update([FromBody]List<Product> models)
         {
-          
             if (models != null)
             {
                 _productRepository.Update(models);
