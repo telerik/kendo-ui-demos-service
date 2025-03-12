@@ -26,7 +26,7 @@ namespace KendoCRUDService.Data.Repositories
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _meetings = context.Meetings.ToList().Select(meeting => new MeetingViewModel
+                    _meetings = context.Meetings.Include("MeetingAttendees").ToList().Select(meeting => new MeetingViewModel
                     {
                         MeetingID = meeting.MeetingID,
                         Title = meeting.Title,
