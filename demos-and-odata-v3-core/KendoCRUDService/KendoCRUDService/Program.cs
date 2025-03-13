@@ -5,6 +5,7 @@ using System;
 using Microsoft.Extensions.DependencyInjection;
 using KendoCRUDService.Hubs;
 using KendoCRUDService.Data.Repositories;
+using KendoCRUDService.FileBrowser;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,10 +34,10 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
-    builder
+    builder.WithOrigins("https://jquery-demos-staging.azurewebsites.net")
         .AllowAnyMethod()
         .AllowAnyHeader()
-        .AllowAnyOrigin();
+        .AllowCredentials();
 }));
 
 
@@ -77,6 +78,7 @@ builder.Services.AddSingleton<EmployeeRepository>();
 builder.Services.AddSingleton<GanttDependencyRepository>();
 builder.Services.AddSingleton<GanttResourceAssignmentsRepository>();
 builder.Services.AddSingleton<GanttResourcesRepository>();
+builder.Services.AddSingleton<ContentInitializer>();
 builder.Services.AddSingleton<GanttTaskRepository>();
 builder.Services.AddSingleton<MeetingsRepository>();
 builder.Services.AddSingleton<OrderRepository>();
