@@ -10,9 +10,9 @@ namespace KendoCRUDService.Controllers
 {
     public class ImageBrowserController : Controller
     {
-        private const string contentFolderRoot = "~/Content/";
-        private const string prettyName = "Images/";
-        private static readonly string[] foldersToCopy = new[] { "~/Content/editor/" };
+        private const string contentFolderRoot = "Content\\";
+        private const string prettyName = "Images\\";
+        private static readonly string[] foldersToCopy = new[] { "Content\\editor" };
         private const string DefaultFilter = "*.png,*.gif,*.jpg,*.jpeg";
 
         private const int ThumbnailHeight = 80;
@@ -24,12 +24,15 @@ namespace KendoCRUDService.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public ImageBrowserController(DirectoryRepository directoryRepository, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment hostingEnvironment)
+        public ImageBrowserController(DirectoryRepository directoryRepository, ContentInitializer initializer, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment hostingEnvironment)
         {
             _httpContextAccessor = httpContextAccessor;
             _hostingEnvironment = hostingEnvironment;
             directoryBrowser = new DirectoryBrowser();
-            contentInitializer = new ContentInitializer(_httpContextAccessor, contentFolderRoot, foldersToCopy, prettyName);
+            contentInitializer = initializer;
+            contentInitializer.prettyName = prettyName;
+            contentInitializer.foldersToCopy = foldersToCopy;
+            contentInitializer.rootFolder = contentFolderRoot;
             thumbnailCreator = new ThumbnailCreator();
         }
 
@@ -68,7 +71,7 @@ namespace KendoCRUDService.Controllers
                 return ToAbsolute(ContentPath);
             }
 
-            return CombinePaths(ToAbsolute(ContentPath), path);
+            return CombinePaths(ToAbsolute(ContentPath), path.Replace(@"/", "\\")).Replace(@"/", string.Empty); ;
         }
 
         public virtual IActionResult Read(string path)
@@ -186,22 +189,17 @@ namespace KendoCRUDService.Controllers
 
         protected virtual void DeleteFile(string path)
         {
-
-            var physicalPath = _hostingEnvironment.ContentRootPath;
-
-            if (System.IO.File.Exists(physicalPath))
+            if (System.IO.File.Exists(path))
             {
-                System.IO.File.Delete(physicalPath);
+                System.IO.File.Delete(path);
             }
         }
 
         protected virtual void DeleteDirectory(string path)
         {
-            var physicalPath = _hostingEnvironment.ContentRootPath;
-
-            if (Directory.Exists(physicalPath))
+            if (Directory.Exists(path))
             {
-                Directory.Delete(physicalPath, true);
+                Directory.Delete(path, true);
             }
         }
 
@@ -259,17 +257,21 @@ namespace KendoCRUDService.Controllers
             if (AuthorizeUpload(path, file))
             {
                 string filePath = Path.Combine(_hostingEnvironment.ContentRootPath, fileName);
-                using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
                 {
                     file.CopyTo(fileStream);
                 }
+
+                var savedFile = new FileInfo(filePath);
+                string newPath = Path.Combine(path, fileName);
+                System.IO.File.Move(savedFile.FullName, newPath);
 
                 return Json(new
                 {
                     size = file.Length,
                     name = fileName,
                     type = "f"
-                }, "text/plain");
+                });
             }
 
             return new ObjectResult("Forbidden") { StatusCode = 403 };
