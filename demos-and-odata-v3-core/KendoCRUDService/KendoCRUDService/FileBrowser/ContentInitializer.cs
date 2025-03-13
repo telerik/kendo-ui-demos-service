@@ -2,19 +2,17 @@
 {
     public class ContentInitializer
     {
-        private string rootFolder;
-        private string[] foldersToCopy;
-        private string prettyName;
         private readonly ISession _session;
 
 
-        public ContentInitializer(IHttpContextAccessor httpContextAccessor, string rootFolder, string[] foldersToCopy, string prettyName)
+        public ContentInitializer(IHttpContextAccessor httpContextAccessor)
         {
-            this.rootFolder = rootFolder;
-            this.foldersToCopy = foldersToCopy;
-            this.prettyName = prettyName;
             _session = httpContextAccessor.HttpContext.Session;
         }
+
+        public string prettyName { get; set; }
+        public string[] foldersToCopy { get; set; }
+        public string rootFolder { get; set; }
 
         private string UserID
         {
@@ -43,7 +41,7 @@
                     CopyFolder(Path.Combine(contentRootPath, sourceFolder), path);
                 }
             }
-            return virtualPath;
+            return path;
         }
 
         private void CopyFolder(string source, string destination)
