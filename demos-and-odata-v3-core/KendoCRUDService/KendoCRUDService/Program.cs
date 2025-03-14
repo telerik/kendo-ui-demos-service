@@ -34,7 +34,7 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
-    builder.WithOrigins("https://jquery-demos-staging.azurewebsites.net")
+    builder.WithOrigins("https://jquery-demos-staging.azurewebsites.net", "http://127.0.0.1:8080")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials();
