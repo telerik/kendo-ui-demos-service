@@ -1,6 +1,8 @@
-﻿using KendoCRUDService.Models;
+﻿using KendoCRUDService.Data.Models;
+using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -10,23 +12,28 @@ namespace KendoCRUDService.Data.Repositories
 
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<TaskViewModel> _tasks;
+        private IHttpContextAccessor _contextAccessor;
+        private ConcurrentDictionary<string, IList<TaskViewModel>> _tasks;
 
         public TasksRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
+            _tasks = new ConcurrentDictionary<string, IList<TaskViewModel>>();
         }
 
         public IList<TaskViewModel> All()
         {
 
-            if (_tasks == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _tasks.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _tasks = context.Tasks.ToList().Select(task => new TaskViewModel
+                    return context.Tasks.ToList().Select(task => new TaskViewModel
                     {
                         TaskID = task.TaskID,
                         Title = task.Title,
@@ -42,9 +49,7 @@ namespace KendoCRUDService.Data.Repositories
                         OwnerID = task.OwnerID
                     }).ToList();
                 }
-            }
-
-            return _tasks;
+            });
         }
 
         public TaskViewModel One(Func<TaskViewModel, bool> predicate)

@@ -2,6 +2,7 @@
 using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -11,22 +12,27 @@ namespace KendoCRUDService.Data.Repositories
 
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<MeetingViewModel> _meetings;
+        private ConcurrentDictionary<string, IList<MeetingViewModel>> _meetings;
+        private IHttpContextAccessor _contextAccessor;
 
         public MeetingsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _scopeFactory = scopeFactory;
+            _contextAccessor = httpContextAccessor;
+            _meetings = new ConcurrentDictionary<string, IList<MeetingViewModel>>();
         }
 
         public IList<MeetingViewModel> All()
         {
-            if (_meetings == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _meetings.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _meetings = context.Meetings.Include("MeetingAttendees").ToList().Select(meeting => new MeetingViewModel
+                    return context.Meetings.Include("MeetingAttendees").ToList().Select(meeting => new MeetingViewModel
                     {
                         MeetingID = meeting.MeetingID,
                         Title = meeting.Title,
@@ -43,10 +49,7 @@ namespace KendoCRUDService.Data.Repositories
                         Attendees = meeting.MeetingAttendees.Select(m => m.AttendeeID).ToArray()
                     }).ToList();
                 }
-
-            }
-
-            return _meetings;
+            });
         }
 
         public MeetingViewModel One(Func<MeetingViewModel, bool> predicate)

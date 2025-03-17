@@ -3,6 +3,7 @@ using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -10,15 +11,16 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        IList<CardModel> _carModels;
-        IList<ColumnModel> _columnsList;
-        public IList<CardModel> All
+        private IHttpContextAccessor _contextAccessor;
+        ConcurrentDictionary<string, IList<CardModel>> _carModels;
+        ConcurrentDictionary<string, IList<ColumnModel>> _columnsList;
+        public IList<CardModel> All()
         {
-            get
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _carModels.GetOrAdd(userKey, key =>
             {
-                if (_carModels == null)
-                {
-                    _carModels = new List<CardModel>
+                return new List<CardModel>
                     {
                             new CardModel { ID = 1, Title = "Campaigns", Order = 1, Description = "Create a new landing page for campaign", Status = "todo", Category = "urgent" },
                             new CardModel { ID = 2, Title = "Newsletters", Order = 2, Description = "Send newsletter", Status = "todo", Category = "highpriority" },
@@ -36,41 +38,39 @@ namespace KendoCRUDService.Data.Repositories
                             new CardModel { ID = 14, Title = "Content", Order = 14, Description = "Publish new blogpost", Status = "done", Category = "urgent" },
                             new CardModel { ID = 15, Title = "Post-Release Party", Order = 15, Description = "Plan new release celebration", Status = "done", Category = "lowpriority" }
                     };
-                }
-
-                return _carModels;
-            }
+            });
         }
 
-        public IList<ColumnModel> ColumnsList
+        public IList<ColumnModel> ColumnsList()
         {
-            get
-            {
-                if (_columnsList == null)
-                {
-                    _columnsList = new List<ColumnModel>
-                    {
-                            new ColumnModel { ID = 1, Text = "Pending", Order = 1, Status = "todo" },
-                            new ColumnModel { ID = 2, Text = "Under Review", Order = 2, Status = "inProgress" },
-                            new ColumnModel { ID = 2, Text = "Scheduled", Order = 3, Status = "done" }
-                    };
-                }
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-                return _columnsList;
-            }
+            return _columnsList.GetOrAdd(userKey, key =>
+            {
+                return new List<ColumnModel>
+                {
+                        new ColumnModel { ID = 1, Text = "Pending", Order = 1, Status = "todo" },
+                        new ColumnModel { ID = 2, Text = "Under Review", Order = 2, Status = "inProgress" },
+                        new ColumnModel { ID = 2, Text = "Scheduled", Order = 3, Status = "done" }
+                };
+
+            });
         }
 
         public TaskBoardRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _scopeFactory = scopeFactory;
+            _contextAccessor = httpContextAccessor;
+            _columnsList = new ConcurrentDictionary<string, IList<ColumnModel>>();
+            _carModels = new ConcurrentDictionary<string, IList<CardModel>>();
         }
 
         public void Create(CardModel model)
         {
-            int lastID = All.Select(m => m.ID).Max();
+            int lastID = All().Select(m => m.ID).Max();
             model.ID = lastID + 1;
-            All.Add(model);
+            All().Add(model);
         }
 
         public void Update(CardModel model)
@@ -88,17 +88,17 @@ namespace KendoCRUDService.Data.Repositories
         {
             var target = One(m => m.ID == model.ID);
 
-            All.Remove(target);
+            All().Remove(target);
         }
 
         public void Columns_Create(ColumnModel model)
         {
-            int lastID = ColumnsList.Select(m => m.ID).Max();
-            int order = ColumnsList.Select(m => m.Order).Max();
+            int lastID = ColumnsList().Select(m => m.ID).Max();
+            int order = ColumnsList().Select(m => m.Order).Max();
             model.ID = lastID + 1;
             model.Order = order + 1;
             model.Status = model.Text.ToLowerInvariant();
-            ColumnsList.Add(model);
+            ColumnsList().Add(model);
         }
 
         public void Columns_Update(ColumnModel model)
@@ -114,17 +114,17 @@ namespace KendoCRUDService.Data.Repositories
         {
             var target = ColumnOne(m => m.ID == model.ID);
 
-            ColumnsList.Remove(target);
+            ColumnsList().Remove(target);
         }
 
         public CardModel One(Func<CardModel, bool> predicate)
         {
-            return All.FirstOrDefault(predicate);
+            return All().FirstOrDefault(predicate);
         }
 
         public ColumnModel ColumnOne(Func<ColumnModel, bool> predicate)
         {
-            return ColumnsList.FirstOrDefault(predicate);
+            return ColumnsList().FirstOrDefault(predicate);
         }
     }
 }

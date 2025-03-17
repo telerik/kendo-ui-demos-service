@@ -2,6 +2,7 @@
 using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -9,22 +10,26 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<DetailProduct> _detailProducts;
+        private ConcurrentDictionary<string, IList<DetailProduct>> _detailProducts;
+        private IHttpContextAccessor _contextAccessor;
 
         public DetailProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
         }
 
         public IList<DetailProduct> All()
         {
-            if (_detailProducts == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _detailProducts.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _detailProducts = context.DetailProducts.Select(p => new DetailProduct
+                    return context.DetailProducts.Select(p => new DetailProduct
                     {
                         ProductID = p.ProductID,
                         ProductName = p.ProductName,
@@ -42,9 +47,7 @@ namespace KendoCRUDService.Data.Repositories
                         UnitsOnOrder = p.UnitsOnOrder
                     }).ToList();
                 }
-            }
-
-            return _detailProducts;
+            });
         }
 
         public DetailProduct One(Func<DetailProduct, bool> predicate)
