@@ -150,7 +150,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("odata/Categories({key})/Products")]
         public IQueryable<Product> GetProducts([FromODataUri] int key)
         {
-            return _dbContext.Categories.Where(m => m.CategoryID == key).SelectMany(m => m.Products).Include("OrderDetails");
+            return _dbContext.Categories.AsNoTracking().Where(m => m.CategoryID == key).SelectMany(m => m.Products).Include("OrderDetails");
 
         }
 
