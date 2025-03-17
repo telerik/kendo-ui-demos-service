@@ -1,6 +1,7 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -8,26 +9,28 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<GanttTask> _tasks;
+        private ConcurrentDictionary<string, IList<GanttTask>> _tasks;
+        private IHttpContextAccessor _contextAccessor;
 
         public GanttTaskRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
         }
 
         public IList<GanttTask> All()
         {
-            if (_tasks == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _tasks.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _tasks = context.GanttTasks.ToList();
+                    return context.GanttTasks.ToList();
                 }
-            }
-
-            return _tasks;
+            });
         }
 
         public void Insert(IEnumerable<GanttTask> tasks)
@@ -40,7 +43,7 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(GanttTask task)
         {
-             var first = _tasks.OrderByDescending(e => e.ID).FirstOrDefault();
+             var first = All().OrderByDescending(e => e.ID).FirstOrDefault();
 
              var id = 0;
 
@@ -56,7 +59,7 @@ namespace KendoCRUDService.Data.Repositories
                  throw new Exception("Parent task was not created!");
              }
 
-            _tasks.Insert(0, task);
+            All().Insert(0, task);
         }
 
         public void Update(IEnumerable<GanttTask> tasks)
@@ -69,7 +72,7 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Update(GanttTask task)
         {
-            var target = _tasks.FirstOrDefault(e => e.ID == task.ID);
+            var target = All().FirstOrDefault(e => e.ID == task.ID);
 
             if (target != null)
             {
@@ -95,10 +98,10 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Delete(GanttTask task)
         {
-            var target = _tasks.FirstOrDefault(p => p.ID == task.ID);
+            var target = All().FirstOrDefault(p => p.ID == task.ID);
             if (target != null)
             {
-                _tasks.Remove(target);
+                All().Remove(target);
             }
         }
     }

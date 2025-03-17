@@ -2,6 +2,7 @@
 using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -9,22 +10,26 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<EmployeeDirectoryModel> _employeeDirectories;
+        private ConcurrentDictionary<string, IList<EmployeeDirectoryModel>> _employeeDirectories;
+        private IHttpContextAccessor _contextAccessor;
 
         public EmployeeDirectoryRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
         }
 
         public IList<EmployeeDirectoryModel> All()
         {
-            if (_employeeDirectories == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _employeeDirectories.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _employeeDirectories = context.EmployeeDirectories.ToList().Select(employee => new EmployeeDirectoryModel
+                    return context.EmployeeDirectories.ToList().Select(employee => new EmployeeDirectoryModel
                     {
                         EmployeeId = employee.EmployeeID,
                         ReportsTo = employee.ReportsTo,
@@ -40,9 +45,7 @@ namespace KendoCRUDService.Data.Repositories
                         Position = employee.Position
                     }).ToList();
                 }
-            }
-
-            return _employeeDirectories;
+            });
         }
 
         public EmployeeDirectoryModel One(Func<EmployeeDirectoryModel, bool> predicate)

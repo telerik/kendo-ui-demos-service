@@ -2,6 +2,7 @@
 using KendoCRUDService.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -10,26 +11,28 @@ namespace KendoCRUDService.Data.Repositories
         private bool UpdateDatabase = false;
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<GanttResourceAssignment> _resourceAssignments;
+        private ConcurrentDictionary<string, IList<GanttResourceAssignment>> _resourceAssignments;
+        private IHttpContextAccessor _contextAccessor;
 
         public GanttResourceAssignmentsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
         }
 
         public IList<GanttResourceAssignment> All()
         {
-            if (_resourceAssignments == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _resourceAssignments.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _resourceAssignments = context.GanttResourceAssignments.ToList();
+                    return context.GanttResourceAssignments.ToList();
                 }
-            }
-
-            return _resourceAssignments;
+            });
         }
 
         public GanttResourceAssignment One(Func<GanttResourceAssignment, bool> predicate)
