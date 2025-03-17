@@ -19,6 +19,7 @@ namespace KendoCRUDService.Data.Repositories
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
+            _dependencies = new ConcurrentDictionary<string, IList<GanttDependency>>();
         }
 
 

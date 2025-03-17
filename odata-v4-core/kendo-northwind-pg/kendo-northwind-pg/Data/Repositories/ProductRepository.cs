@@ -1,6 +1,7 @@
 ﻿using kendo_northwind_pg.Data.Models;
 using kendo_northwind_pg.Extensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace kendo_northwind_pg.Data.Repositories
 {
@@ -8,23 +9,28 @@ namespace kendo_northwind_pg.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<Product> _products;
+        private IHttpContextAccessor _contextAccessor;
+        private ConcurrentDictionary<string, IList<Product>> _products;
+
 
         public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
+            _products = new ConcurrentDictionary<string, IList<Product>>();
         }
 
         public IList<Product> All()
         {
-            if (_products == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _products.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _products =
-                    context.Products
+                    return context.Products
                     .Include(p => p.OrderDetails)
                     .ThenInclude(od => od.Order).Select(p => new Product
                     {
@@ -41,9 +47,7 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            }
-
-            return _products;
+            });
         }
 
         public Product One(Func<Product, bool> predicate)

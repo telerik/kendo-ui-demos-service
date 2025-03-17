@@ -18,6 +18,7 @@ namespace KendoCRUDService.Data.Repositories
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
+            _detailProducts = new ConcurrentDictionary<string, IList<DetailProduct>>();
         }
 
         public IList<DetailProduct> All()
