@@ -2,6 +2,7 @@
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -10,27 +11,29 @@ namespace KendoCRUDService.Data.Repositories
         private bool UpdateDatabase = false;
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<GanttDependency> _dependencies;
+        private ConcurrentDictionary<string, IList<GanttDependency>> _dependencies;
+        private IHttpContextAccessor _contextAccessor;
 
         public GanttDependencyRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
         }
 
 
         public IList<GanttDependency> All()
         {
-            if (_dependencies == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _dependencies.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _dependencies = context.GanttDependencies.ToList();
+                    return context.GanttDependencies.ToList();
                 }
-            }
-
-            return _dependencies;
+            });
         }
 
         public GanttDependency One(Func<GanttDependency, bool> predicate)

@@ -1,6 +1,9 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace KendoCRUDService.Data.Repositories
@@ -9,22 +12,27 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<Product> _products;
+        private IHttpContextAccessor _contextAccessor;
+        private ConcurrentDictionary<string, IList<Product>> _productsByUsers;
 
         public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _scopeFactory = scopeFactory;
+            _contextAccessor = httpContextAccessor;
+            _productsByUsers = new ConcurrentDictionary<string, IList<Product>>();
         }
 
         public IList<Product> All()
         {
-            if (_products == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _productsByUsers.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _products = context.Products.Select(p => new Product
+                    return context.Products.Select(p => new Product
                     {
                         ProductID = p.ProductID,
                         ProductName = p.ProductName,
@@ -38,9 +46,7 @@ namespace KendoCRUDService.Data.Repositories
                         Discontinued = p.Discontinued
                     }).ToList();
                 }
-            }
-
-            return _products;
+            });
         }
 
         public Product One(Func<Product, bool> predicate)

@@ -1,6 +1,7 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.SessionExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -9,26 +10,28 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IList<OrgChartConnection> _connetctions;
+        private ConcurrentDictionary<string, IList<OrgChartConnection>> _connetctions;
+        private IHttpContextAccessor _contextAccessor;
 
         public DiagramConnectionsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
         {
             _session = httpContextAccessor.HttpContext.Session;
+            _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
         }
 
         public IList<OrgChartConnection> All()
         {
-            if (_connetctions == null)
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+
+            return _connetctions.GetOrAdd(userKey, key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    _connetctions = context.OrgChartConnections.ToList();
+                    return context.OrgChartConnections.ToList();
                 }
-            }
-
-            return _connetctions;
+            });
         }
 
         public OrgChartConnection One(Func<OrgChartConnection, bool> predicate)
