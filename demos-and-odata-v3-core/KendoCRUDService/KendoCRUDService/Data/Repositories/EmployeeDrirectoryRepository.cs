@@ -18,6 +18,7 @@ namespace KendoCRUDService.Data.Repositories
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
+            _employeeDirectories = new ConcurrentDictionary<string, IList<EmployeeDirectoryModel>>();
         }
 
         public IList<EmployeeDirectoryModel> All()
