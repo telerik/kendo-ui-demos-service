@@ -24,7 +24,7 @@ builder.Services.AddControllersWithViews()
     .AddOData(opt => opt.Select()
                             .OrderBy()
                             .SetMaxTop(1000)
-                            //.EnableQueryFeatures(1000)
+                            .EnableQueryFeatures(1000)
                             .Filter()
                             .Count()
                             .Expand()
@@ -62,7 +62,7 @@ var connectionStringBuilder = new SqliteConnectionStringBuilder
 var connectionString = connectionStringBuilder.ToString();
 var connection = new SqliteConnection(connectionString)
 {
-    DefaultTimeout = 120
+    DefaultTimeout = 1000
 };
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
