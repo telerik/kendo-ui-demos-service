@@ -18,6 +18,7 @@ namespace KendoCRUDService.Data.Repositories
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
+            _connetctions = new ConcurrentDictionary<string, IList<OrgChartConnection>>();
         }
 
         public IList<OrgChartConnection> All()
