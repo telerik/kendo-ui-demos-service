@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,10 +14,12 @@ namespace kendo_northwind_pg.Controllers
     public class CategoriesController : ODataController
     {
         private DemoDbContext _dbContext;
+        private ProductRepository _productRepository;
 
-        public CategoriesController(DemoDbContext dbContext)
+        public CategoriesController(DemoDbContext dbContext, ProductRepository productRepository)
         {
             _dbContext = dbContext;
+            _productRepository = productRepository;
         }
 
         // GET: odata/Categories
@@ -150,8 +153,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("odata/Categories({key})/Products")]
         public IQueryable<Product> GetProducts([FromODataUri] int key)
         {
-            return _dbContext.Categories.AsNoTracking().Where(m => m.CategoryID == key).SelectMany(m => m.Products).Include("OrderDetails");
-
+            return _productRepository.All().Where(m => m.CategoryID == key).AsQueryable();
         }
 
         private bool CategoryExists(int key)
