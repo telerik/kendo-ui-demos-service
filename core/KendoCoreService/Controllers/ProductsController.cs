@@ -18,6 +18,13 @@ namespace KendoCoreService.Controllers
             _products = products;
         }
 
+        [HttpGet]
+        public IActionResult Get()
+        {
+            var data = this._products.All().AsQueryable();
+            return Ok(data);
+        }
+
         [HttpPost]
         public IActionResult Read([FromBody]Request request)
         {
