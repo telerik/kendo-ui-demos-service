@@ -25,9 +25,9 @@ namespace KendoCRUDService.Data.Repositories
 
         public IList<Product> All()
         {
-            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            //var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _productsByUsers.GetOrAdd(userKey, key =>
+            return _productsByUsers.GetOrAdd("test", key =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
