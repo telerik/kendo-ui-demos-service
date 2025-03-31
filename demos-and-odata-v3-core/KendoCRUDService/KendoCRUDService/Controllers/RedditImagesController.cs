@@ -9,22 +9,10 @@ namespace KendoCRUDService.Controllers
 {
     public class RedditImagesController : Controller
     {
-        private const string contentFolderRoot = "Content\\reddit\\";
-        private const string prettyName = "Images\\";
-        private static readonly string[] foldersToCopy = new[] { "Content\\reddit\\" };
-
-        private readonly DirectoryBrowser directoryBrowser;
-        private readonly ContentInitializer contentInitializer;
         private readonly ThumbnailCreator thumbnailCreator;
 
-
-        public RedditImagesController(IHttpContextAccessor httpContextAccessor, ContentInitializer initializer)
+        public RedditImagesController(IHttpContextAccessor httpContextAccessor)
         {
-            directoryBrowser = new DirectoryBrowser();
-            contentInitializer = initializer;
-            contentInitializer.prettyName = prettyName;
-            contentInitializer.foldersToCopy = foldersToCopy;
-            contentInitializer.rootFolder = contentFolderRoot;
             thumbnailCreator = new ThumbnailCreator();
         }
 

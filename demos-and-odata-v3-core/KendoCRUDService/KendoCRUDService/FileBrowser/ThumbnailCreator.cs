@@ -17,7 +17,7 @@ namespace KendoCRUDService.FileBrowser
             this.resizer = new ImageResizer();
         }
 
-        public byte[] Create(Stream source, ImageSize desiredSize, string contentType)
+        public byte[] Create(byte[] source, ImageSize desiredSize, string contentType)
         {
             using (var image = SKBitmap.Decode(source))
             {               
