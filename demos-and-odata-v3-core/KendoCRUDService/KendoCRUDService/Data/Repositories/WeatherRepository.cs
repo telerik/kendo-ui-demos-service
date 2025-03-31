@@ -17,13 +17,9 @@ namespace KendoCRUDService.Data.Repositories
 
         public IList<WeatherModel> ByStation(string station)
         {
-            var sessionKey = "w_byStation_" + station;
-            var result = _session.GetObjectFromJson<IList<WeatherModel>>(sessionKey);
-
-            if (result == null)
+            using (var db = _contextFactory.CreateDbContext())
             {
-                result =
-                    _contextFactory.CreateDbContext().Weather.Select(w => new WeatherModel
+                return _contextFactory.CreateDbContext().Weather.Select(w => new WeatherModel
                      {
                          Date = w.Date,
                          TMax = w.TMax,
@@ -31,31 +27,18 @@ namespace KendoCRUDService.Data.Repositories
                          Rain = w.Rain,
                          Wind = w.Wind
                      }).ToList();
-
-                _session.SetObjectAsJson(sessionKey, result);
             }
-
-            return result;
         }
 
         public IList<WeatherModel> ByMonth(string station, int year, int month)
         {
-            var sessionKey = "w_byMonth_" + station + year + month;
-            var result = _session.GetObjectFromJson<IList<WeatherModel>>(sessionKey);
-
-            if (result == null)
+            using (var db = _contextFactory.CreateDbContext())
             {
-                using (var db = _contextFactory.CreateDbContext()) {
-                    result =
-                        ByStation(station)
-                            .Where(w => w.Date.Year == year && w.Date.Month == month)
-                            .ToList();
-
-                    _session.SetObjectAsJson(sessionKey, result);
-                }
+                return
+                    ByStation(station)
+                        .Where(w => w.Date.Year == year && w.Date.Month == month)
+                        .ToList();
             }
-
-            return result;
         }
     }
 }
