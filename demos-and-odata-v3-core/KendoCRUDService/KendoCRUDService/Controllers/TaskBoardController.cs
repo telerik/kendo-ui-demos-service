@@ -16,7 +16,7 @@ namespace KendoCRUDService.Controllers
 
         public ActionResult Index()
         {
-            return Json(_taskBoard.All);
+            return Json(_taskBoard.All());
         }
 
         public JsonResult Create(CardModel model)
@@ -49,7 +49,7 @@ namespace KendoCRUDService.Controllers
 
         public ActionResult Columns()
         {
-            return Json(_taskBoard.ColumnsList);
+            return Json(_taskBoard.ColumnsList());
         }
 
         public JsonResult Columns_Create(ColumnModel model)

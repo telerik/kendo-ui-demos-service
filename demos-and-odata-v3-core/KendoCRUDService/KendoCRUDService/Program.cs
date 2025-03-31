@@ -80,6 +80,7 @@ builder.Services.AddSingleton<DiagramShapesRepository>();
 builder.Services.AddSingleton<DirectoryRepository>();
 builder.Services.AddSingleton<FileBrowserRepository>();
 builder.Services.AddSingleton<EmployeeDirectoryRepository>();
+builder.Services.AddSingleton<EmployeeOrgChartRepository>();
 builder.Services.AddSingleton<EmployeeRepository>();
 builder.Services.AddSingleton<GanttDependencyRepository>();
 builder.Services.AddSingleton<GanttResourceAssignmentsRepository>();
