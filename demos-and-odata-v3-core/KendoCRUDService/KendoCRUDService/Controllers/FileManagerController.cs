@@ -9,156 +9,52 @@ namespace KendoCRUDService.Controllers
 {
     public class FileManagerController : Controller
     {
-        private const string contentFolderRoot = "Content\\";
-        private const string prettyName = "Files\\";
-        private static readonly string[] foldersToCopy = new[] { "Content\\filemanager\\" };
         private const string DefaultFilter = "*.txt,*.docx,*.xlsx,*.ppt,*.pptx,*.zip,*.rar,*.jpg,*.jpeg,*.gif,*.png";
-
         private readonly DirectoryRepository _directoryRepository;
-        private readonly ContentInitializer contentInitializer;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public FileManagerController(DirectoryRepository directoryRepository, ContentInitializer initializer, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment hostingEnvironment)
+        public FileManagerController(DirectoryRepository directoryRepository)
         {
-            _httpContextAccessor = httpContextAccessor;
-            _hostingEnvironment = hostingEnvironment;
             _directoryRepository = directoryRepository;
-            contentInitializer = initializer;
-            initializer.prettyName = prettyName;
-            initializer.foldersToCopy = foldersToCopy;
-            initializer.rootFolder = contentFolderRoot;
-        }
-
-        public string ContentPath
-        {
-            get
-            {
-                return contentInitializer.CreateUserFolder(_hostingEnvironment.ContentRootPath);
-            }
-        }
-
-        private string ToAbsolute(string virtualPath)
-        {
-            return HttpContext.Request.PathBase + virtualPath;
-        }
-
-        private string ToVirtual(string path)
-        {
-            return path.Replace(ContentPath, string.Empty).Replace(@"\", "/");
-        }
-
-        private string CombinePaths(string basePath, string relativePath)
-        {
-            return basePath + "/" + relativePath;
-        }
-
-        public virtual bool AuthorizeRead(string path)
-        {
-            return CanAccess(path);
-        }
-
-        protected virtual bool CanAccess(string path)
-        {
-            var appRoothPath = _hostingEnvironment.ContentRootPath;
-
-            return Path.Combine(appRoothPath, path).StartsWith(Path.Combine(appRoothPath, ContentPath), StringComparison.OrdinalIgnoreCase);
-        }
-
-        private string NormalizePath(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                return ToAbsolute(ContentPath);
-            }
-            return CombinePaths(ToAbsolute(ContentPath), path.Replace(@"/", "\\")).Replace(@"/", string.Empty);
+            _directoryRepository.ContentRootPath = "Content\\filemanager\\";
+            _directoryRepository.DefaultFilter = DefaultFilter;
         }
 
         public virtual IActionResult Read(string target)
         {
-            var path = NormalizePath(target);
+            var path = _directoryRepository.NormalizePath(target);
 
-            if (AuthorizeRead(path))
+            try
             {
-                try
-                {
-                    var result = _directoryRepository
-                        .GetContent(path, DefaultFilter)
-                        .Select(f => new
-                        {
-                            name = f.Name,
-                            size = f.Size,
-                            path = ToVirtual(f.Path),
-                            extension = f.Extension,
-                            isDirectory = f.IsDirectory,
-                            hasDirectories = f.HasDirectories,
-                            created = f.Created,
-                            createdUtc = f.CreatedUtc,
-                            modified = f.Modified,
-                            modifiedUtc = f.ModifiedUtc
-                        });
+                var result = _directoryRepository
+                    .GetContent(path??"", DefaultFilter)
+                    .Select(f => new
+                    {
+                        name = f.Name,
+                        size = f.Size,
+                        path = f.Path,
+                        extension = f.Extension,
+                        isDirectory = f.IsDirectory,
+                        hasDirectories = f.HasDirectories,
+                        created = f.Created,
+                        createdUtc = f.CreatedUtc,
+                        modified = f.Modified,
+                        modifiedUtc = f.ModifiedUtc
+                    });
 
-                    return Json(result);
-                }
-                catch (DirectoryNotFoundException)
-                {
-                    return new ObjectResult("File Not Found") { StatusCode = 404};
-                }
+                return Json(result);
             }
-
-            return new ObjectResult("Forbidden") { StatusCode = 403 };
+            catch (DirectoryNotFoundException)
+            {
+                return new ObjectResult("File Not Found") { StatusCode = 404};
+            }
         }
 
         [HttpPost]
         public virtual ActionResult Destroy(FileManagerEntry entry)
         {
-            var path = NormalizePath(entry.Path);
+            _directoryRepository.Destroy(entry);
 
-            if (!string.IsNullOrEmpty(path))
-            {
-                if (!AuthorizeDelete(path))
-                {
-                    return new ObjectResult("Forbidden");
-                }
-
-                if (entry.IsDirectory)
-                {
-                    DeleteDirectory(path);
-                }
-                else
-                {
-                    DeleteFile(path);
-                }
-
-                return Json(new object[0]);
-            }
-            return new ObjectResult("File Not Found") { StatusCode = 404};
-        }
-
-        public virtual bool AuthorizeDelete(string path)
-        {
-            return CanAccess(path);
-        }
-
-        protected virtual void DeleteFile(string path)
-        {
-            if (System.IO.File.Exists(path))
-            {
-                System.IO.File.Delete(path);
-            }
-        }
-
-        protected virtual void DeleteDirectory(string path)
-        {
-            if (Directory.Exists(path))
-            {
-                Directory.Delete(path, true);
-            }
-        }
-
-        public virtual bool Authorize(string path)
-        {
-            return CanAccess(path);
+            return Json(new object[0]);
         }
 
         [HttpPost]
@@ -166,31 +62,20 @@ namespace KendoCRUDService.Controllers
         {
             FileManagerEntry newEntry;
 
-            if (!Authorize(NormalizePath(target)))
-            {
-                return new ObjectResult("Forbidden") { StatusCode = 403};
-            }
-
-            if (!Authorize(NormalizePath(Path.Combine(target, entry.Name + entry.Extension))))
-            {
-                throw new Exception("Forbidden");
-            }
-
             if (String.IsNullOrEmpty(entry.Path))
             {
-                newEntry = CreateNewFolder(target, entry);
+                newEntry = _directoryRepository.Create(target, entry);
             }
             else
             {
-                newEntry = CopyEntry(target, entry);
+                newEntry = _directoryRepository.CopyEntry(target, entry);
             }
-
 
             return Json(new
             {
                 name = newEntry.Name,
                 size = newEntry.Size,
-                path = ToVirtual(newEntry.Path),
+                path = newEntry.Path,
                 extension = newEntry.Extension,
                 isDirectory = newEntry.IsDirectory,
                 hasDirectories = newEntry.HasDirectories,
@@ -201,103 +86,18 @@ namespace KendoCRUDService.Controllers
             });
         }
 
-        private FileManagerEntry CopyEntry(string target, FileManagerEntry entry)
-        {
-            var path = NormalizePath(entry.Path);
-            var physicalPath = Path.Combine(_hostingEnvironment.ContentRootPath, path);
-            var physicalTarget = EnsureUniqueName(NormalizePath(target), entry);
 
-            FileManagerEntry newEntry;
-
-            if (entry.IsDirectory)
-            {
-                CopyDirectory(new DirectoryInfo(physicalPath), Directory.CreateDirectory(physicalTarget));
-                newEntry = _directoryRepository.GetDirectory(physicalTarget);
-            }
-            else
-            {
-                System.IO.File.Copy(physicalPath, physicalTarget);
-                newEntry = _directoryRepository.GetFile(physicalTarget);
-            }
-
-            return newEntry;
-        }
-
-        private void CopyDirectory(DirectoryInfo source, DirectoryInfo target)
-        {
-            foreach (FileInfo fi in source.GetFiles())
-            {
-                Console.WriteLine(@"Copying {0}\{1}", target.FullName, fi.Name);
-                fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
-            }
-
-            // Copy each subdirectory using recursion.
-            foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
-            {
-                DirectoryInfo nextTargetSubDir =
-                    target.CreateSubdirectory(diSourceSubDir.Name);
-                CopyDirectory(diSourceSubDir, nextTargetSubDir);
-            }
-        }
-
-        private string EnsureUniqueName(string target, FileManagerEntry entry)
-        {
-            var tempName = entry.Name + entry.Extension;
-            int sequence = 0;
-            var physicalTarget = Path.Combine(target, entry.Name + entry.Extension);
-
-            physicalTarget = Path.Combine(_hostingEnvironment.ContentRootPath, physicalTarget);
-
-            if (entry.IsDirectory)
-            {
-                while (Directory.Exists(physicalTarget))
-                {
-                    tempName = entry.Name + String.Format("({0})", ++sequence);
-                    physicalTarget = Path.Combine(Path.Combine(_hostingEnvironment.ContentRootPath, target), tempName);
-                }
-            }
-            else
-            {
-                while (System.IO.File.Exists(physicalTarget))
-                {
-                    tempName = entry.Name + String.Format("({0})", ++sequence) + entry.Extension;
-                    physicalTarget = Path.Combine(Path.Combine(_hostingEnvironment.ContentRootPath, target), tempName);
-                }
-            }
-
-            return physicalTarget;
-        }
-
-        private FileManagerEntry CreateNewFolder(string target, FileManagerEntry entry)
-        {
-            FileManagerEntry newEntry;
-            var path = NormalizePath(target);
-            string physicalPath = EnsureUniqueName(path, entry);
-
-            Directory.CreateDirectory(physicalPath);
-
-            newEntry = _directoryRepository.GetDirectory(physicalPath);
-
-            return newEntry;
-        }
 
         [HttpPost]
         public virtual ActionResult Update(string target, FileManagerEntry entry)
         {
-            FileManagerEntry newEntry;
-
-            if (!Authorize(NormalizePath(entry.Path)) && !Authorize(NormalizePath(target)))
-            {
-                return new ObjectResult("Forbidden") { StatusCode = 403};
-            }
-
-            newEntry = RenameEntry(entry);
+            FileManagerEntry newEntry = _directoryRepository.RenameEntry(entry);
 
             return Json(new
             {
                 name = newEntry.Name,
                 size = newEntry.Size,
-                path = ToVirtual(newEntry.Path),
+                path = newEntry.Path,
                 extension = newEntry.Extension,
                 isDirectory = newEntry.IsDirectory,
                 hasDirectories = newEntry.HasDirectories,
@@ -306,86 +106,27 @@ namespace KendoCRUDService.Controllers
                 modified = newEntry.Modified,
                 modifiedUtc = newEntry.ModifiedUtc
             });
-        }
-
-        private FileManagerEntry RenameEntry(FileManagerEntry entry)
-        {
-            var path = NormalizePath(entry.Path);
-            var physicalPath = Path.Combine(ContentPath, path);
-            var physicalTarget = EnsureUniqueName(Path.GetDirectoryName(path), entry);
-            FileManagerEntry newEntry;
-
-            if (entry.IsDirectory)
-            {
-                Directory.Move(physicalPath, physicalTarget);
-                newEntry = _directoryRepository.GetDirectory(physicalTarget);
-            }
-            else
-            {
-                var file = new FileInfo(physicalPath);
-                System.IO.File.Move(file.FullName, physicalTarget);
-                newEntry = _directoryRepository.GetFile(physicalTarget);
-            }
-
-            return newEntry;
-        }
-
-        public virtual bool AuthorizeUpload(string path, IFormFile file)
-        {
-            if (!CanAccess(path))
-            {
-                throw new DirectoryNotFoundException(String.Format("The specified path cannot be found - {0}", path));
-            }
-
-            if (!IsValidFile(file.FileName))
-            {
-                throw new InvalidDataException(String.Format("The type of file is not allowed. Only {0} extensions are allowed.", DefaultFilter));
-            }
-
-            return true;
-        }
-
-        private bool IsValidFile(string fileName)
-        {
-            var extension = Path.GetExtension(fileName);
-            var allowedExtensions = DefaultFilter.Split(',');
-
-            return allowedExtensions.Any(e => e.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase));
         }
 
         [HttpPost]
         public virtual ActionResult Upload(string path, IFormFile file)
         {
-            path = NormalizePath(path);
-            var fileName = Path.GetFileName(file.FileName);
+            FileManagerEntry newEntry;
+            newEntry = _directoryRepository.Upload(path, file);
 
-            if (AuthorizeUpload(path, file))
+            return Json(new
             {
-                string filePath = Path.Combine(_hostingEnvironment.ContentRootPath, fileName);
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    file.CopyTo(fileStream);
-                }
-
-                // Move the file to the user target folder
-                var savedFile = new FileInfo(filePath);
-                string newPath = Path.Combine(path, fileName);
-                System.IO.File.Move(savedFile.FullName, newPath);
-
-                return Json(new
-                {
-                    size = file.Length,
-                    name = fileName,
-                    type = "f"
-                });
-            }
-
-            return new ObjectResult("Forbidden") { StatusCode = 403};
-        }
-
-        public virtual bool AuthorizeFile(string path)
-        {
-            return CanAccess(path) && IsValidFile(Path.GetExtension(path));
+                name = newEntry.Name,
+                size = newEntry.Size,
+                path = newEntry.Path,
+                extension = newEntry.Extension,
+                isDirectory = newEntry.IsDirectory,
+                hasDirectories = newEntry.HasDirectories,
+                created = newEntry.Created,
+                createdUtc = newEntry.CreatedUtc,
+                modified = newEntry.Modified,
+                modifiedUtc = newEntry.ModifiedUtc
+            });
         }
     }
 }

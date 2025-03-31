@@ -1,11 +1,8 @@
 using KendoCRUDService.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using System;
-using Microsoft.Extensions.DependencyInjection;
 using KendoCRUDService.Hubs;
 using KendoCRUDService.Data.Repositories;
-using KendoCRUDService.FileBrowser;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +31,15 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
-    builder.WithOrigins("https://jquery-demos-staging.azurewebsites.net", "http://127.0.0.1:8080", "https://dojo.telerik.com", "https://runner.telerik.io")
+    builder.WithOrigins(
+        "https://jquery-demos-staging.azurewebsites.net", 
+        "https://codesandbox.io", 
+        "https://stackblitz.com", 
+        "http://127.0.0.1:8080", 
+        "https://dojo.telerik.com",
+        "https://localhost",
+        "http://localhost",
+        "https://runner.telerik.io")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials();
@@ -72,13 +77,13 @@ builder.Services.AddSingleton<CustomerRepository>();
 builder.Services.AddSingleton<DetailProductRepository>();
 builder.Services.AddSingleton<DiagramConnectionsRepository>();
 builder.Services.AddSingleton<DiagramShapesRepository>();
-builder.Services.AddSingleton<DirectoryRepository>(x => new DirectoryRepository(builder.Environment.ContentRootPath));
+builder.Services.AddSingleton<DirectoryRepository>();
+builder.Services.AddSingleton<FileBrowserRepository>();
 builder.Services.AddSingleton<EmployeeDirectoryRepository>();
 builder.Services.AddSingleton<EmployeeRepository>();
 builder.Services.AddSingleton<GanttDependencyRepository>();
 builder.Services.AddSingleton<GanttResourceAssignmentsRepository>();
 builder.Services.AddSingleton<GanttResourcesRepository>();
-builder.Services.AddSingleton<ContentInitializer>();
 builder.Services.AddSingleton<GanttTaskRepository>();
 builder.Services.AddSingleton<MeetingsRepository>();
 builder.Services.AddSingleton<OrderRepository>();

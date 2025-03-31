@@ -7,5 +7,6 @@ namespace KendoCRUDService.FileBrowser
         public string Name { get; set; }
         public EntryType Type { get; set; }
         public long Size { get; set; }
+        public string Path { get; set; }
     }
 }
