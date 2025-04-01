@@ -35,7 +35,7 @@ builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
         .WithOrigins(
         "https://jquery-demos-staging.azurewebsites.net",
         "https://codesandbox.io",
-        "https://*.stackblitz.com",
+        "https://*.stackblitz.io",
         "https://*.csb.app",
         "http://127.0.0.1:8080", 
         "https://dojo.telerik.com",
