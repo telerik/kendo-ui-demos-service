@@ -31,10 +31,12 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
-    builder.WithOrigins(
-        "https://jquery-demos-staging.azurewebsites.net", 
-        "https://codesandbox.io", 
-        "https://stackblitz.com", 
+    builder.SetIsOriginAllowedToAllowWildcardSubdomains()
+        .WithOrigins(
+        "https://jquery-demos-staging.azurewebsites.net",
+        "https://codesandbox.io",
+        "https://*.stackblitz.com",
+        "https://*.csb.app",
         "http://127.0.0.1:8080", 
         "https://dojo.telerik.com",
         "https://localhost",
