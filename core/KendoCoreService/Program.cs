@@ -30,7 +30,7 @@ builder.Services.AddSingleton(
     ));
 
 builder.Services.AddChatClient(services => services.GetRequiredService<AzureOpenAIClient>()
-    .AsChatClient(builder.Configuration["AI:AzureOpenAI:Chat:ModelId"] ?? "gpt-4o-mini"));
+    .GetChatClient(builder.Configuration["AI:AzureOpenAI:Chat:ModelId"] ?? "gpt-4o-mini").AsIChatClient());
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
