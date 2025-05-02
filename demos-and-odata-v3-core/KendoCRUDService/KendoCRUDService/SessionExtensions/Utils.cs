@@ -9,6 +9,9 @@ namespace KendoCRUDService
         public static string GetUserKey(IHttpContextAccessor _contextAccessor)
         {
             var identifierBuilder = new StringBuilder();
+            var connectionID = _contextAccessor.HttpContext.Connection.Id.Substring(0, 11);
+
+            identifierBuilder.Append(connectionID);
 
             var ipAddress = _contextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             identifierBuilder.Append(ipAddress);

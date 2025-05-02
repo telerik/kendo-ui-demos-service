@@ -93,7 +93,7 @@ namespace KendoCRUDService.Data.Repositories
             IList<GanttTask> allTasks = All();
             foreach (var task in tasks)
             {
-                Delete(allTasks);
+                Delete(task);
             }
         }
 
