@@ -99,7 +99,7 @@ var connectionStringBuilder = new SqliteConnectionStringBuilder
 var connectionString = connectionStringBuilder.ToString();
 var connection = new SqliteConnection(connectionString)
 {
-    DefaultTimeout = 120
+    DefaultTimeout = 1000,
 };
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
