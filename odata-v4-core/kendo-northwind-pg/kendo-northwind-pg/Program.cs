@@ -64,12 +64,53 @@ var connection = new SqliteConnection(connectionString)
 {
     DefaultTimeout = 1000
 };
+bool IsOriginAllowed(string origin)
+{
+    var uri = new Uri(origin);
+    var allowedDomains = new string[] {
+        "jquery-demos-staging.azurewebsites.net",
+        "127.0.0.1",
+        "dojo.telerik.com",
+        "runner.telerik.io"
+    };
+    var wildcardDomains = new string[] {
+        "stackblitz.io",
+        "csb.app",
+    };
+
+    bool isAllowed = false;
+    foreach (var allowedDomain in wildcardDomains)
+    {
+        if (uri.Host.EndsWith(allowedDomain, StringComparison.OrdinalIgnoreCase))
+        {
+            isAllowed = true;
+            break;
+        }
+    }
+
+    foreach (var allowedDomain in allowedDomains)
+    {
+        if (uri.Host.Equals(allowedDomain, StringComparison.OrdinalIgnoreCase))
+        {
+            isAllowed = true;
+            break;
+        }
+    }
+
+    if (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) {
+        isAllowed = true;
+    }
+
+    return isAllowed;
+}
+
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
 {
-    builder
+    builder.SetIsOriginAllowedToAllowWildcardSubdomains()
+        .SetIsOriginAllowed(d=> IsOriginAllowed(d))
         .AllowAnyMethod()
         .AllowAnyHeader()
-        .AllowAnyOrigin();
+        .AllowCredentials();
 }));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
