@@ -23,8 +23,8 @@ namespace KendoCRUDService.Controllers
         {
             var path = _directoryRepository.NormalizePath(target);
 
-            try
-            {
+            //try
+            //{
                 var result = _directoryRepository
                     .GetContent(path??"", DefaultFilter)
                     .Select(f => new
@@ -42,11 +42,11 @@ namespace KendoCRUDService.Controllers
                     });
 
                 return Json(result);
-            }
-            catch (DirectoryNotFoundException)
-            {
-                return new ObjectResult("File Not Found") { StatusCode = 404};
-            }
+            //}
+            //catch (DirectoryNotFoundException)
+            //{
+            //    return new ObjectResult("File Not Found") { StatusCode = 404};
+            //}
         }
 
         [HttpPost]
