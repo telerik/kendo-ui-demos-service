@@ -15,7 +15,7 @@ namespace KendoCRUDService.Controllers
         public FileManagerController(DirectoryRepository directoryRepository)
         {
             _directoryRepository = directoryRepository;
-            _directoryRepository.ContentRootPath = "Content\\filemanager\\";
+            _directoryRepository.ContentRootPath = "Content/filemanager/";
             _directoryRepository.DefaultFilter = DefaultFilter;
         }
 
