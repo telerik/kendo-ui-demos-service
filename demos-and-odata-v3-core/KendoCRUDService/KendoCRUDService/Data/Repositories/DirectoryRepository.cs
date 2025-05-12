@@ -81,7 +81,7 @@ namespace KendoCRUDService.Data.Repositories
         public IEnumerable<FileManagerEntry> GetContent(string path, string filter)
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            path = path.Replace(@"\", "\\").Replace(@"/", "\\");
+            //path = path.Replace(@"\", "\\").Replace(@"/", "\\");
 
             var entries = _directories.GetOrAdd(userKey, key =>
             {
@@ -117,7 +117,7 @@ namespace KendoCRUDService.Data.Repositories
 
         public  virtual FileManagerEntry RenameEntry(FileManagerEntry entry)
         {
-            var path = NormalizePath(entry.Path.Replace(@"/", "\\"));
+            var path = NormalizePath(entry.Path);//.Replace(@"/", "\\")
             var physicalPath = path;
             var physicalTarget = EnsureUniqueName(Path.GetDirectoryName(path), entry);
             var currentEntries = Content();
@@ -194,7 +194,7 @@ namespace KendoCRUDService.Data.Repositories
         public void Destroy(FileManagerEntry entry)
         {
             var currentEntries = Content();
-            var path = NormalizePath(entry.Path.Replace(@"/", "\\"));
+            var path = NormalizePath(entry.Path);//.Replace(@"/", "\\")
 
             currentEntries.RemoveAll(x => x.Path.Contains(path));
 
@@ -232,7 +232,7 @@ namespace KendoCRUDService.Data.Repositories
             var currentEntries = Content();
 
             FileManagerEntry newEntry = new FileManagerEntry();
-            path = NormalizePath(path.Replace(@"/", "\\"));
+            path = NormalizePath(path);//.Replace(@"/", "\\")
             var fileName = Path.GetFileNameWithoutExtension(file.FileName);
 
             if (AuthorizeUpload(path, file))
@@ -260,7 +260,7 @@ namespace KendoCRUDService.Data.Repositories
         {
             var currentEntries = Content();
 
-            var path = NormalizePath((target??"").Replace("/", "\\"));
+            var path = NormalizePath((target??""));//.Replace("/", "\\")
             string physicalPath = EnsureUniqueName(path, entry);
 
             entry.Path = physicalPath;
