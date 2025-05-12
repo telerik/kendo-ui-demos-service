@@ -11,7 +11,7 @@ namespace KendoCRUDService.Controllers
 {
     public class FileBrowserController : Controller
     {
-        private const string contentFolderRoot = "Content\\editor\\";
+        private const string contentFolderRoot = "wwwroot/Content/editor";
         private const string DefaultFilter = "*.txt,*.doc,*.docx,*.xls,*.xlsx,*.ppt,*.pptx,*.zip,*.rar,*.jpg,*.jpeg,*.gif,*.png";
 
         private readonly FileBrowserRepository _fileBrowserRepository;

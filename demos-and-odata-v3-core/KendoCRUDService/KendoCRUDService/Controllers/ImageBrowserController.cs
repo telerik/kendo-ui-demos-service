@@ -10,7 +10,7 @@ namespace KendoCRUDService.Controllers
 {
     public class ImageBrowserController : Controller
     {
-        private const string contentFolderRoot = "Content\\editor\\";
+        private const string contentFolderRoot = "wwwroot/Content/editor";
         private const string DefaultFilter = "*.png,*.gif,*.jpg,*.jpeg";
 
         private readonly FileBrowserRepository _fileBrowserRepository;

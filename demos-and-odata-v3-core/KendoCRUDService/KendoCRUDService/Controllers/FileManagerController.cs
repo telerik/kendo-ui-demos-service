@@ -15,7 +15,7 @@ namespace KendoCRUDService.Controllers
         public FileManagerController(DirectoryRepository directoryRepository)
         {
             _directoryRepository = directoryRepository;
-            _directoryRepository.ContentRootPath = "wwwroot/Content/filemanager/";
+            _directoryRepository.ContentRootPath = "wwwroot/Content/filemanager";
             _directoryRepository.DefaultFilter = DefaultFilter;
         }
 
@@ -23,8 +23,8 @@ namespace KendoCRUDService.Controllers
         {
             var path = _directoryRepository.NormalizePath(target);
 
-            //try
-            //{
+            try
+            {
                 var result = _directoryRepository
                     .GetContent(path??"", DefaultFilter)
                     .Select(f => new
@@ -42,11 +42,11 @@ namespace KendoCRUDService.Controllers
                     });
 
                 return Json(result);
-            //}
-            //catch (DirectoryNotFoundException)
-            //{
-            //    return new ObjectResult("File Not Found") { StatusCode = 404};
-            //}
+            }
+            catch (DirectoryNotFoundException)
+            {
+               return new ObjectResult("File Not Found") { StatusCode = 404};
+            }
         }
 
         [HttpPost]
@@ -64,7 +64,7 @@ namespace KendoCRUDService.Controllers
 
             if (String.IsNullOrEmpty(entry.Path))
             {
-                newEntry = _directoryRepository.Create(target, entry);
+                newEntry = _directoryRepository.Create(entry, target);
             }
             else
             {

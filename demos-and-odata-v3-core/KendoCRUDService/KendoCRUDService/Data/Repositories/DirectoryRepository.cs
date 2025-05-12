@@ -33,8 +33,7 @@ namespace KendoCRUDService.Data.Repositories
             var directories = directory.GetDirectories();
             var files = GetFiles(path,filter);
             var result = new List<FileManagerEntry>();
-
-
+            
             foreach (var item in files)
             {
                 result.Add(item);
@@ -57,7 +56,6 @@ namespace KendoCRUDService.Data.Repositories
         {
             var targetFullPath = Path.Combine(ContentPath, NormalizePath(target));
             var parentPath = Directory.GetParent(path).FullName;
-
             return targetFullPath.Trim('\\') == parentPath.Trim('\\');
         }
 
@@ -73,7 +71,7 @@ namespace KendoCRUDService.Data.Repositories
                 Modified = entry.Modified,
                 ModifiedUtc = entry.ModifiedUtc,
                 Name = entry.Name,
-                Path = entry.Path.Replace(ContentPath, "").Replace(@"\", "/"),
+                Path = entry.Path.Replace(ContentPath + "/", "").Replace(@"\", "/"),
                 Size = entry.Size
             };
         }
@@ -81,7 +79,6 @@ namespace KendoCRUDService.Data.Repositories
         public IEnumerable<FileManagerEntry> GetContent(string path, string filter)
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            //path = path.Replace(@"\", "\\").Replace(@"/", "\\");
 
             var entries = _directories.GetOrAdd(userKey, key =>
             {
@@ -89,6 +86,8 @@ namespace KendoCRUDService.Data.Repositories
             });
 
             var virtualized = entries.Where(d => TargetMatch(path, d.Path)).Select(VirtualizePath);
+
+         
 
             return entries.Where(d => TargetMatch(path, d.Path)).Select(VirtualizePath).ToList();
         }
@@ -117,7 +116,7 @@ namespace KendoCRUDService.Data.Repositories
 
         public  virtual FileManagerEntry RenameEntry(FileManagerEntry entry)
         {
-            var path = NormalizePath(entry.Path);//.Replace(@"/", "\\")
+            var path = NormalizePath(entry.Path);
             var physicalPath = path;
             var physicalTarget = EnsureUniqueName(Path.GetDirectoryName(path), entry);
             var currentEntries = Content();
@@ -194,14 +193,14 @@ namespace KendoCRUDService.Data.Repositories
         public void Destroy(FileManagerEntry entry)
         {
             var currentEntries = Content();
-            var path = NormalizePath(entry.Path);//.Replace(@"/", "\\")
+            var path = NormalizePath(entry.Path);
 
             currentEntries.RemoveAll(x => x.Path.Contains(path));
 
             UpdateContent(currentEntries);
         }
 
-        public FileManagerEntry Create(string target, FileManagerEntry entry)
+        public FileManagerEntry Create(FileManagerEntry entry, string target)
         {
             FileManagerEntry newEntry;
 
@@ -209,6 +208,8 @@ namespace KendoCRUDService.Data.Repositories
             {
                 throw new Exception("Forbidden");
             }
+
+            target = target??"";
 
             if (!Authorize(NormalizePath(Path.Combine(target, entry.Name + entry.Extension))))
             {
@@ -231,8 +232,10 @@ namespace KendoCRUDService.Data.Repositories
         {
             var currentEntries = Content();
 
+            path = path??"";
+
             FileManagerEntry newEntry = new FileManagerEntry();
-            path = NormalizePath(path);//.Replace(@"/", "\\")
+            path = NormalizePath(path);
             var fileName = Path.GetFileNameWithoutExtension(file.FileName);
 
             if (AuthorizeUpload(path, file))
@@ -260,7 +263,7 @@ namespace KendoCRUDService.Data.Repositories
         {
             var currentEntries = Content();
 
-            var path = NormalizePath((target??""));//.Replace("/", "\\")
+            var path = NormalizePath((target??""));
             string physicalPath = EnsureUniqueName(path, entry);
 
             entry.Path = physicalPath;
