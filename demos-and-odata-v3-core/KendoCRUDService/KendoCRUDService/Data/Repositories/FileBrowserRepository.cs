@@ -46,7 +46,6 @@ namespace KendoCRUDService.Data.Repositories
         public IEnumerable<FileBrowserEntry> GetContent(string path, string filter)
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            path = path.Replace(@"\", "\\").Replace(@"/", "\\");
 
             var entries = _entries.GetOrAdd(userKey, key =>
             {
@@ -66,7 +65,7 @@ namespace KendoCRUDService.Data.Repositories
             }
             else
             {
-                return Path.Combine(ContentPath, path).Replace(@"/", "\\");
+                return Path.Combine(ContentPath, path);
             }
         }
 
@@ -152,7 +151,6 @@ namespace KendoCRUDService.Data.Repositories
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
             var normalizedPath = NormalizePath((path ?? ""));
-
             if (_files.ContainsKey(userKey + normalizedPath))
             {
                 return _files[userKey + normalizedPath];
