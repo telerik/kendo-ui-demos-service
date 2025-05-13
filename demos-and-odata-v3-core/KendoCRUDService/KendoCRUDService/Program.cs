@@ -35,6 +35,7 @@ bool IsOriginAllowed(string origin)
     var allowedDomains = new string[] {
         "jquery-demos-staging.azurewebsites.net",
         "telerik.com",
+        "demos.telerik.com",
         "127.0.0.1",
         "dojo.telerik.com",
         "runner.telerik.io"

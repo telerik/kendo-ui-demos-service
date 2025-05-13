@@ -71,6 +71,7 @@ bool IsOriginAllowed(string origin)
         "jquery-demos-staging.azurewebsites.net",
         "127.0.0.1",
         "telerik.com",
+        "demos.telerik.com",
         "dojo.telerik.com",
         "runner.telerik.io"
     };
