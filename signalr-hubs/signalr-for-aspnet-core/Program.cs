@@ -19,12 +19,14 @@ builder.Services.AddSignalR().AddJsonProtocol(options => {
     options.PayloadSerializerOptions.PropertyNamingPolicy = null;
 });
 
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseCors("CorsPolicy");
 app.UseRouting();
+app.MapHealthChecks("/health");
 app.MapHub<ProductHub>("/products");
 
 app.Run();
