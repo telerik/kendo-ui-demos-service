@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace KendoCRUDService
+namespace KendoCRUDService.Extensions
 {
     public static class SessionUtils
     {

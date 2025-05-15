@@ -1,6 +1,6 @@
 ﻿using KendoCRUDService.Data.Repositories;
 using KendoCRUDService.Models;
-using KendoCRUDService.SessionExtensions;
+using KendoCRUDService.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KendoCRUDService.Controllers

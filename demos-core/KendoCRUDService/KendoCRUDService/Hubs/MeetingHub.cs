@@ -1,6 +1,6 @@
 ﻿using KendoCRUDService.Data;
 using KendoCRUDService.Data.Models;
-using KendoCRUDService.SessionExtensions;
+using KendoCRUDService.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 

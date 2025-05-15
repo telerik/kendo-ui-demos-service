@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace KendoCRUDService.SessionExtensions
+namespace KendoCRUDService.Extensions
 {
-    public static class SessionExtensions
+    public static class SessionExtension
     {
         public static void SetObjectAsJson(this ISession session, string key, object value)
         {

@@ -1,10 +1,31 @@
+using Azure;
+using Azure.AI.OpenAI;
+using Microsoft.Extensions.AI;
 using KendoCRUDService.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using KendoCRUDService.Hubs;
 using KendoCRUDService.Data.Repositories;
+using KendoCRUDService.Filters;
+using KendoCRUDService.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ApiKeySettings>(builder.Configuration.GetSection("ApiKeys"));
+
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddSingleton(
+    new AzureOpenAIClient(
+        new Uri(builder.Configuration["AI:AzureOpenAI:Endpoint"] ??
+            throw new InvalidOperationException("The required AzureOpenAI endpoint was not configured for this application.")),
+        new AzureKeyCredential(builder.Configuration["AI:AzureOpenAI:Key"] ??
+            throw new InvalidOperationException("The required AzureOpenAI Key was not configured for this application."))
+    ));
+
+    builder.Services.AddChatClient(services => services.GetRequiredService<AzureOpenAIClient>()
+        .AsChatClient(builder.Configuration["AI:AzureOpenAI:Chat:ModelId"] ?? "gpt-4o-mini"));
+}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
@@ -38,7 +59,8 @@ bool IsOriginAllowed(string origin)
         "demos.telerik.com",
         "127.0.0.1",
         "dojo.telerik.com",
-        "runner.telerik.io"
+        "runner.telerik.io",
+        "sitdemos.telerik.com"
     };
     var wildcardDomains = new string[] {
         "stackblitz.io",
@@ -128,6 +150,9 @@ builder.Services.AddSingleton<CategoriesRepository>();
 builder.Services.AddSingleton<TaskBoardRepository>();
 builder.Services.AddSingleton<TasksRepository>();
 builder.Services.AddSingleton<WeatherRepository>();
+builder.Services.AddScoped<ApiKeyAuthFilter>();
+
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -153,5 +178,6 @@ app.MapControllerRoute(
 
 app.MapHub<ProductHub>("/signalr/products");
 app.MapHub<MeetingHub>("/signalr/meetings");
+app.MapHealthChecks("/health");
 
 app.Run();

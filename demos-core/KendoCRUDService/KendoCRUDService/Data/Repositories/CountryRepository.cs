@@ -1,5 +1,5 @@
 ﻿using KendoCRUDService.Data.Models;
-using KendoCRUDService.SessionExtensions;
+using KendoCRUDService.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace KendoCRUDService.Data.Repositories

@@ -1,5 +1,5 @@
 ﻿using KendoCRUDService.Data.Models;
-using KendoCRUDService.SessionExtensions;
+using KendoCRUDService.Extensions;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 using System.Collections.Concurrent;
