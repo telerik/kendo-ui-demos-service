@@ -1,6 +1,6 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.Models;
-using KendoCRUDService.SessionExtensions;
+using KendoCRUDService.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 
