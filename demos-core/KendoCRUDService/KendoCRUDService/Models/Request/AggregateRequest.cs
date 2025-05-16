@@ -1,13 +1,13 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace KendoCRUDService.Models.Request
 {
     public class AggregateRequest
     {
-        [JsonPropertyName("field")]
+        [JsonProperty("field")]
         public string? Field { get; set; }
 
-        [JsonPropertyName("aggregate")]
+        [JsonProperty("aggregate")]
         public string? Aggregate { get; set; }
     }
 }

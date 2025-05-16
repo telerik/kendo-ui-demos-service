@@ -1,30 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace KendoCRUDService.Models.Response
 {
     public class Group
     {
-        [JsonPropertyName("field")]
+        [JsonProperty("field")]
         public string? Field { get; set; }
 
-        [JsonPropertyName("value")]
+        [JsonProperty("value")]
         public object? Value { get; set; }
 
-        [JsonPropertyName("hasSubgroups")]
+        [JsonProperty("hasSubgroups")]
         public bool HasSubgroups { get; set; }
 
-        [JsonPropertyName("items")]
+        [JsonProperty("items")]
         public IList? Items { get; set; }
 
-        [JsonPropertyName("itemCount")]
+        [JsonProperty("itemCount")]
         public int ItemCount { get; set; }
 
-        [JsonPropertyName("subgroupCount")]
+        [JsonProperty("subgroupCount")]
         public int SubgroupCount { get; set; }
 
-        [JsonPropertyName("aggregates")]
+        [JsonProperty("aggregates")]
         public Dictionary<string, Dictionary<string, string>>? Aggregates { get; set; }
     }
 }
