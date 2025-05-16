@@ -46,7 +46,7 @@ namespace graphql_aspnet_core
                     .AllowAnyHeader()
                     .AllowAnyOrigin();
             }));
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc();
             services.AddControllers().AddNewtonsoftJson();
 
             // SampleEntities db context
