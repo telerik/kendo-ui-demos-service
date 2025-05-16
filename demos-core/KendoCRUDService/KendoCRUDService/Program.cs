@@ -8,6 +8,7 @@ using KendoCRUDService.Hubs;
 using KendoCRUDService.Data.Repositories;
 using KendoCRUDService.Filters;
 using KendoCRUDService.Settings;
+using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,8 +31,7 @@ if (builder.Environment.IsProduction())
 // Add services to the container.
 builder.Services.AddControllersWithViews()
     .AddSessionStateTempDataProvider()
-    .AddJsonOptions(options =>
-                options.JsonSerializerOptions.PropertyNamingPolicy = null);
+    .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
 
 if (builder.Environment.IsProduction())
 {
