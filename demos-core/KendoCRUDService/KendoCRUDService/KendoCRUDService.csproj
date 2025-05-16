@@ -21,6 +21,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SkiaSharp" Version="2.88.3" />
     <PackageReference Include="TweetSharp" Version="2.3.1" />
+    <PackageReference Include="SharpToken" Version="2.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.7" />
   </ItemGroup>
 
   <ItemGroup>
