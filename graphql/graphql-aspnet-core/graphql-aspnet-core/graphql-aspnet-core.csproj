@@ -8,6 +8,7 @@
     <PackageReference Include="GraphQL" Version="8.4.1" />
     <PackageReference Include="GraphQL.NewtonsoftJson" Version="8.4.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.7" />
 	  <PackageReference Include="Telerik.UI.for.AspNet.Core" Version="2025.1.227" />
   </ItemGroup>
 </Project>
