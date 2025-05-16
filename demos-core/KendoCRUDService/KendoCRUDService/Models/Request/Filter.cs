@@ -1,22 +1,22 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace KendoCRUDService.Models.Request
 {
     public class Filter
     {
-        [JsonPropertyName("logic")]
+        [JsonProperty("logic")]
         public string? Logic { get; set; }
 
-        [JsonPropertyName("field")]
+        [JsonProperty("field")]
         public string? Field { get; set; }
 
-        [JsonPropertyName("operator")]
+        [JsonProperty("operator")]
         public string? Operator { get; set; }
 
-        [JsonPropertyName("value")]
+        [JsonProperty("value")]
         public object? Value { get; set; }
 
-        [JsonPropertyName("filters")]
+        [JsonProperty("filters")]
         public List<Filter>? Filters { get; set; }
 
         public bool IsDescriptor

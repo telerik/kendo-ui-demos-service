@@ -1,13 +1,13 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace KendoCRUDService.Models.Request
 {
     public class Sort
     {
-        [JsonPropertyName("field")]
+        [JsonProperty("field")]
         public string? Field { get; set; }
 
-        [JsonPropertyName("dir")]
+        [JsonProperty("dir")]
         public string? Dir { get; set; }
     }
 }

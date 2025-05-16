@@ -1,30 +1,30 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace KendoCRUDService.Models.Request
 {
     public class Request
     {
-        [JsonPropertyName("skip")]
+        [JsonProperty("skip")]
         public int Skip { get; set; }
 
-        [JsonPropertyName("take")]
+        [JsonProperty("take")]
         public int Take { get; set; }
 
-        [JsonPropertyName("groupPaging")]
+        [JsonProperty("groupPaging")]
         public bool GroupPaging { get; set; }
 
-        [JsonPropertyName("sort")]
+        [JsonProperty("sort")]
         public List<Sort>? Sorts { get; set; }
 
-        [JsonPropertyName("filter")]
+        [JsonProperty("filter")]
         public Filter? Filter { get; set; }
 
-        [JsonPropertyName("group")]
+        [JsonProperty("group")]
         public List<GroupRequest>? Groups { get; set; }
 
-        [JsonPropertyName("aggregate")]
+        [JsonProperty("aggregate")]
         public List<AggregateRequest>? Aggregates { get; set; }
     }
 }
