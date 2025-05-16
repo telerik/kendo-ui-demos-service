@@ -32,12 +32,24 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddSession();
 
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "sample.db");
-var tmpDbPath = Path.Combine("tmp", "demos-local.db");
+var tmpDir = Path.Combine(builder.Environment.ContentRootPath, "tmp");
+var tmpDbPath = Path.Combine(tmpDir, "demos-local.db");
 
 if (builder.Environment.IsProduction())
 {
-    //In production, the SQLite DB is copied to a temp location to avoid locking issues.
-    File.Delete(tmpDbPath);
+    // In production, the SQLite DB is copied to a temp location to avoid locking issues.
+    if (!Directory.Exists(tmpDir))
+    {
+        Console.WriteLine($"Creating directory: {tmpDir}");
+        Directory.CreateDirectory(tmpDir);
+    }
+
+    if (File.Exists(tmpDbPath))
+    {
+        Console.WriteLine($"Deleting existing file: {tmpDbPath}");
+        File.Delete(tmpDbPath);
+    }
+
     File.Copy(dbPath, tmpDbPath);
     dbPath = tmpDbPath;
 }
