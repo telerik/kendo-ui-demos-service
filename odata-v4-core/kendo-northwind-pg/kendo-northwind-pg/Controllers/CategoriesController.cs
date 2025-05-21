@@ -25,7 +25,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Categories
         [HttpGet]
         [EnableQuery]
-        [Route("odata/Categories")]
+        [Route("Categories")]
         public IQueryable<Category> GetCategories()
         {
             return _dbContext.Categories;
@@ -34,7 +34,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Categories(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/Categories({key})")]
+        [Route("Categories({key})")]
         public IQueryable<Category> GetCategory([FromODataUri] int key)
         {
             return _dbContext.Categories.Where(category => category.CategoryID == key);
@@ -42,7 +42,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/Categories(5)
         [HttpPut]
-        [Route("odata/Categories({key})")]
+        [Route("Categories({key})")]
         public IActionResult Put([FromODataUri] int key, Category category)
         {
             if (!ModelState.IsValid)
@@ -78,7 +78,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Categories
         [HttpPost]
-        [Route("odata/Categories")]
+        [Route("Categories")]
         public IActionResult Post(Category category)
         {
             if (!ModelState.IsValid)
@@ -95,7 +95,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/Categories(5)
         [AcceptVerbs("PATCH", "MERGE")]
-        [Route("odata/Categories")]
+        [Route("Categories")]
         public IActionResult Patch([FromODataUri] int key, Delta<Category> patch)
         {
             if (!ModelState.IsValid)
@@ -132,7 +132,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/Categories(5)
         [HttpDelete]
-        [Route("odata/Categories({key})")]
+        [Route("Categories({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             Category category = _dbContext.Categories.Find(key);
@@ -150,7 +150,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Categories(5)/Products
         [HttpGet]
         [EnableQuery]
-        [Route("odata/Categories({key})/Products")]
+        [Route("Categories({key})/Products")]
         public IQueryable<Product> GetProducts([FromODataUri] int key)
         {
             return _productRepository.All().Where(m => m.CategoryID == key).AsQueryable();

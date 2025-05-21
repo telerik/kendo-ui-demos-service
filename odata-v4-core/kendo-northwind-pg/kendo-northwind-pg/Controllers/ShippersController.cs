@@ -23,7 +23,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Shippers
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]")]
+        [Route("Shippers")]
         public IQueryable<Shipper> GetShippers()
         {
             return db.Shippers;
@@ -32,7 +32,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Shippers(5)
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})")]
+        [Route("Shippers({key})")]
         public SingleResult<Shipper> GetShipper([FromODataUri] int key)
         {
             return SingleResult.Create(db.Shippers.Where(shipper => shipper.ShipperID == key));
@@ -40,7 +40,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/Shippers(5)
         [HttpPut]
-        [Route("[controller]({key})")]
+        [Route("Shippers({key})")]
         public IActionResult Put([FromODataUri] int key, Shipper shipper)
         {
             if (!ModelState.IsValid)
@@ -76,7 +76,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Shippers
         [HttpPost]
-        [Route("[controller]")]
+        [Route("Shippers")]
         public IActionResult Post(Shipper shipper)
         {
             if (!ModelState.IsValid)
@@ -92,7 +92,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/Shippers(5)
         [AcceptVerbs("PATCH", "MERGE")]
-        [Route("[controller]({key})")]
+        [Route("Shippers({key})")]
         public IActionResult Patch([FromODataUri] int key, Delta<Shipper> patch)
         {
             if (!ModelState.IsValid)
@@ -129,7 +129,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/Shippers(5)
         [HttpDelete]
-        [Route("[controller]({key})")]
+        [Route("Shippers({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             Shipper shipper = db.Shippers.Find(key);
@@ -147,7 +147,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Shippers(5)/Orders
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})/Orders")]
+        [Route("Shippers({key})/Orders")]
         public IQueryable<Order> GetOrders([FromODataUri] int key)
         {
             return db.Shippers.Where(m => m.ShipperID == key).SelectMany(m => m.Orders);

@@ -23,7 +23,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/GanttTasks
         [HttpGet]
         [EnableQuery]
-        [Route("odata/GanttTasks")]
+        [Route("GanttTasks")]
         public IQueryable<GanttTask> Get()
         {
             return db.GanttTasks;
@@ -32,7 +32,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/GanttTasks(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/GanttTasks({key})")]
+        [Route("GanttTasks({key})")]
         public SingleResult<GanttTask> Get([FromODataUri] int key)
         {
             return SingleResult.Create(db.GanttTasks.Where(gp => gp.Id == key));
@@ -40,7 +40,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/GanttDependencies(5)
         [HttpPut]
-        [Route("[controller]({key})")]
+        [Route("GanttTasks({key})")]
         public IActionResult Put([FromODataUri] int key, GanttTask ganttTask)
         {
             if (!ModelState.IsValid)
@@ -76,7 +76,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/GanttDependencies
         [HttpPost]
-        [Route("[controller]")]
+        [Route("GanttTasks")]
         public IActionResult Post(GanttTask ganttTask)
         {
             if (!ModelState.IsValid)
@@ -107,7 +107,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/GanttDependencies(5)
         [AcceptVerbs("PATCH", "MERGE")]
-        [Route("[controller]({key})")]
+        [Route("GanttTasks({key})")]
         public IActionResult Patch([FromODataUri] int key, Delta<GanttTask> patch)
         {
             if (!ModelState.IsValid)
@@ -144,7 +144,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/GanttDependencies(5)
         [HttpDelete]
-        [Route("[controller]({key})")]
+        [Route("GanttTasks({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             GanttTask ganttTask = db.GanttTasks.Find(key);
