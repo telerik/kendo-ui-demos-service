@@ -33,9 +33,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Regions({key})")]
-        public SingleResult<Region> GetRegion([FromODataUri] int key)
+        public IEnumerable<Region> GetRegion([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Region.Where(region => region.RegionID == key));
+            return db.Region.Where(region => region.RegionID == key);
         }
 
         // PUT: odata/Regions(5)

@@ -33,9 +33,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Orders({key})")]
-        public SingleResult<Order> GetOrder([FromODataUri] int key)
+        public IEnumerable<Order> GetOrder([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Orders.Where(order => order.OrderID == key));
+            return db.Orders.Where(order => order.OrderID == key);
         }
 
         // PUT: odata/Orders(5)
@@ -148,18 +148,18 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Orders({key})/Customer")]
-        public SingleResult<Customer> GetCustomer([FromODataUri] int key)
+        public IEnumerable<Customer> GetCustomer([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Orders.Where(m => m.OrderID == key).Select(m => m.Customer));
+            return db.Orders.Where(m => m.OrderID == key).Select(m => m.Customer);
         }
 
         // GET: odata/Orders(5)/Employee
         [HttpGet]
         [EnableQuery]
         [Route("Orders({key})/Employee")]
-        public SingleResult<Employee> GetEmployee([FromODataUri] int key)
+        public IEnumerable<Employee> GetEmployee([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Orders.Where(m => m.OrderID == key).Select(m => m.Employee));
+            return db.Orders.Where(m => m.OrderID == key).Select(m => m.Employee);
         }
 
         // GET: odata/Orders(5)/Order_Details
@@ -175,9 +175,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Orders({key})/Shipper")]
-        public SingleResult<Shipper> GetShipper([FromODataUri] int key)
+        public IEnumerable<Shipper> GetShipper([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Orders.Where(m => m.OrderID == key).Select(m => m.ShipViaNavigation));
+            return db.Orders.Where(m => m.OrderID == key).Select(m => m.ShipViaNavigation);
         }
 
         private bool OrderExists(int key)

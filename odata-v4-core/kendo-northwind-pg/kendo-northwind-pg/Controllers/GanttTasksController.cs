@@ -33,9 +33,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("GanttTasks({key})")]
-        public SingleResult<GanttTask> Get([FromODataUri] int key)
+        public IQueryable<GanttTask> Get([FromODataUri] int key)
         {
-            return SingleResult.Create(db.GanttTasks.Where(gp => gp.Id == key));
+            return db.GanttTasks.Where(gp => gp.Id == key);
         }
 
         // PUT: odata/GanttDependencies(5)

@@ -33,9 +33,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Territories({key})")]
-        public SingleResult<Territory> GetTerritory([FromODataUri] string key)
+        public IQueryable<Territory> GetTerritory([FromODataUri] string key)
         {
-            return SingleResult.Create(db.Territories.Where(territory => territory.TerritoryID == key));
+            return db.Territories.Where(territory => territory.TerritoryID == key);
         }
 
         // PUT: odata/Territories(5)
@@ -163,9 +163,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Territories({key})/Region")]
-        public SingleResult<Region> GetRegion([FromODataUri] string key)
+        public IQueryable<Region> GetRegion([FromODataUri] string key)
         {
-            return SingleResult.Create(db.Territories.Where(m => m.TerritoryID == key).Select(m => m.Region));
+            return db.Territories.Where(m => m.TerritoryID == key).Select(m => m.Region);
         }
 
         // GET: odata/Territories(5)/Employees

@@ -67,9 +67,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Employees({key})")]
-        public SingleResult<Employee> Get([FromODataUri] int key)
+        public IQueryable<Employee> Get([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Employees.Where(employee => employee.EmployeeID == key));
+            return db.Employees.Where(employee => employee.EmployeeID == key);
         }
 
         // PUT: odata/Employees(5)
@@ -216,9 +216,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("EmployeeManager({key})")]
-        public SingleResult<Employee> GetManager([FromODataUri] int key)
+        public IQueryable<Employee> GetManager([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Employees.Where(m => m.EmployeeID == key).Select(m => m.ReportsToNavigation));
+            return db.Employees.Where(m => m.EmployeeID == key).Select(m => m.ReportsToNavigation);
         }
 
         // GET: odata/EmployeeOrders(5)

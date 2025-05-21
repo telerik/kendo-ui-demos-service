@@ -163,18 +163,18 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Order_Detail({key})/Order")]
-        public SingleResult<Order> GetOrder([FromODataUri] int key)
+        public IQueryable<Order> GetOrder([FromODataUri] int key)
         {
-            return SingleResult.Create(db.OrderDetails.Where(m => m.OrderID == key).Select(m => m.Order));
+            return db.OrderDetails.Where(m => m.OrderID == key).Select(m => m.Order);
         }
 
         // GET: odata/Order_Detail(5)/Product
         [HttpGet]
         [EnableQuery]
         [Route("Order_Detail({key})/Product")]
-        public SingleResult<Product> GetProduct([FromODataUri] int key)
+        public IQueryable<Product> GetProduct([FromODataUri] int key)
         {
-            return SingleResult.Create(db.OrderDetails.Where(m => m.OrderID == key).Select(m => m.Product));
+            return db.OrderDetails.Where(m => m.OrderID == key).Select(m => m.Product);
         }
 
         private bool Order_DetailExists(int key)
