@@ -23,7 +23,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Territories
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]")]
+        [Route("Territories")]
         public IQueryable<Territory> GetTerritories()
         {
             return db.Territories;
@@ -32,7 +32,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Territories(5)
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})")]
+        [Route("Territories({key})")]
         public SingleResult<Territory> GetTerritory([FromODataUri] string key)
         {
             return SingleResult.Create(db.Territories.Where(territory => territory.TerritoryID == key));
@@ -40,7 +40,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/Territories(5)
         [HttpPut]
-        [Route("[controller]({key})")]
+        [Route("Territories({key})")]
         public IActionResult Put([FromODataUri] string key, Territory territory)
         {
             if (!ModelState.IsValid)
@@ -76,7 +76,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Territories
         [HttpPost]
-        [Route("[controller]")]
+        [Route("Territories")]
         public IActionResult Post(Territory territory)
         {
             if (!ModelState.IsValid)
@@ -107,7 +107,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/Territories(5)
         [AcceptVerbs("PATCH", "MERGE")]
-        [Route("[controller]({key})")]
+        [Route("Territories({key})")]
         public IActionResult Patch([FromODataUri] string key, Delta<Territory> patch)
         {
             if (!ModelState.IsValid)
@@ -144,7 +144,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/Territories(5)
         [HttpDelete]
-        [Route("[controller]({key})")]
+        [Route("Territories({key})")]
         public IActionResult Delete([FromODataUri] string key)
         {
             Territory territory = db.Territories.Find(key);
@@ -162,7 +162,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Territories(5)/Region
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})/Region")]
+        [Route("Territories({key})/Region")]
         public SingleResult<Region> GetRegion([FromODataUri] string key)
         {
             return SingleResult.Create(db.Territories.Where(m => m.TerritoryID == key).Select(m => m.Region));
@@ -171,7 +171,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Territories(5)/Employees
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})/Employees")]
+        [Route("Territories({key})/Employees")]
         public IQueryable<Employee> GetEmployees([FromODataUri] string key)
         {
             return db.Territories.Where(m => m.TerritoryID == key).SelectMany(m => m.EmployeeTerritories.Select(x=> x.Employee));

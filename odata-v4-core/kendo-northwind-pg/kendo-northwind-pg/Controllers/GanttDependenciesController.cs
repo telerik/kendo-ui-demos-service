@@ -23,7 +23,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/GanttDependencies
         [HttpGet]
         [EnableQuery]
-        [Route("odata/GanttDependencies")]
+        [Route("GanttDependencies")]
         public IQueryable<GanttDependency> Get()
         {
             return db.GanttDependencies;
@@ -32,7 +32,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/GanttDependencies(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/GanttDependencies({key})")]
+        [Route("GanttDependencies({key})")]
         public SingleResult<GanttDependency> Get([FromODataUri] int key)
         {
             return SingleResult.Create(db.GanttDependencies.Where(gp => gp.Id == key));
@@ -40,7 +40,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/GanttDependencies(5)
         [HttpPut]
-        [Route("[controller]({key})")]
+        [Route("GanttDependencies({key})")]
         public IActionResult Put([FromODataUri] int key, GanttDependency ganttDependency)
         {
             if (!ModelState.IsValid)
@@ -76,7 +76,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/GanttDependencies
         [HttpPost]
-        [Route("[controller]")]
+        [Route("GanttDependencies")]
         public IActionResult Post(GanttDependency ganttDependency)
         {
             if (!ModelState.IsValid)
@@ -107,7 +107,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PATCH: odata/GanttDependencies(5)
         [AcceptVerbs("PATCH", "MERGE")]
-        [Route("[controller]({key})")]
+        [Route("GanttDependencies({key})")]
         public IActionResult Patch([FromODataUri] int key, Delta<GanttDependency> patch)
         {
             if (!ModelState.IsValid)
@@ -144,7 +144,7 @@ namespace kendo_northwind_pg.Controllers
 
         // DELETE: odata/GanttDependencies(5)
         [HttpDelete]
-        [Route("[controller]({key})")]
+        [Route("GanttDependencies({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
             GanttDependency ganttDependency = db.GanttDependencies.Find(key);

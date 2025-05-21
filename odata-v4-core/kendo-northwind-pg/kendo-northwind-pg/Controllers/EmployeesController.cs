@@ -24,7 +24,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Employees
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]")]
+        [Route("Employees")]
         public IQueryable<Employee> Get()
         {
             return db.Employees;
@@ -32,7 +32,7 @@ namespace kendo_northwind_pg.Controllers
 
         [HttpGet]
         [EnableQuery]
-        [Route("odata/TopEmployees")]
+        [Route("TopEmployees")]
         public IQueryable<Employee> TopEmployees()
         {
             return db.Employees.Where(x => x.ReportsTo == null).Select(x=> new Employee
@@ -66,7 +66,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Employees(5)
         [HttpGet]
         [EnableQuery]
-        [Route("[controller]({key})")]
+        [Route("Employees({key})")]
         public SingleResult<Employee> Get([FromODataUri] int key)
         {
             return SingleResult.Create(db.Employees.Where(employee => employee.EmployeeID == key));
@@ -74,7 +74,7 @@ namespace kendo_northwind_pg.Controllers
 
         // PUT: odata/Employees(5)
         [HttpPut]
-        [Route("[controller]({key})")]
+        [Route("Employees({key})")]
         public IActionResult Put([FromODataUri] int key, Employee employee)
         {
             if (!ModelState.IsValid)
@@ -110,7 +110,7 @@ namespace kendo_northwind_pg.Controllers
 
         // POST: odata/Employees
         [HttpPost]
-        [Route("[controller]")]
+        [Route("Employees")]
         public IActionResult Post(Employee employee)
         {
             if (!ModelState.IsValid)
@@ -125,7 +125,7 @@ namespace kendo_northwind_pg.Controllers
         }
 
         // PATCH: odata/Employees(5)
-        [Route("[controller]({key})")]
+        [Route("Employees({key})")]
         [AcceptVerbs("PATCH", "MERGE")]
         public IActionResult Patch([FromODataUri] int key, Delta<Employee> patch)
         {
@@ -181,7 +181,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/Subordinates(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/EmployeeSubordinates({key})")]
+        [Route("EmployeeSubordinates({key})")]
         public IEnumerable<Employee> GetSubordinates([FromODataUri] int key)
         {
             return db.Employees.Where(x => x.ReportsTo == key).Select(x => new Employee
@@ -215,7 +215,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/EmployeeManager(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/EmployeeManager({key})")]
+        [Route("EmployeeManager({key})")]
         public SingleResult<Employee> GetManager([FromODataUri] int key)
         {
             return SingleResult.Create(db.Employees.Where(m => m.EmployeeID == key).Select(m => m.ReportsToNavigation));
@@ -224,7 +224,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/EmployeeOrders(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/EmployeeOrders({key})")]
+        [Route("EmployeeOrders({key})")]
         public IQueryable<Order> GetOrders([FromODataUri] int key)
         {
             return db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.Orders);
@@ -233,7 +233,7 @@ namespace kendo_northwind_pg.Controllers
         // GET: odata/EmployeeTerritories(5)
         [HttpGet]
         [EnableQuery]
-        [Route("odata/EmployeeTerritories({key})")]
+        [Route("EmployeeTerritories({key})")]
         public IQueryable<Territory> GetTerritories([FromODataUri] int key)
         {
             return db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.EmployeeTerritories.Select(x=> x.Territory));
