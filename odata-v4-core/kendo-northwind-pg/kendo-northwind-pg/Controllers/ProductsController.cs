@@ -119,9 +119,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Products({key})/Category")]
-        public SingleResult<Category> GetCategory([FromODataUri] int key)
+        public IQueryable<Category> GetCategory([FromODataUri] int key)
         {
-            return SingleResult.Create(_productRepository.Where(m => m.ProductID == key).Select(m => m.Category).AsQueryable());
+            return _productRepository.Where(m => m.ProductID == key).Select(m => m.Category).AsQueryable();
         }
 
         // GET: odata/Products(5)/Order_Details
@@ -137,9 +137,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Products({key})/Supplier")]
-        public SingleResult<Supplier> GetSupplier([FromODataUri] int key)
+        public IQueryable<Supplier> GetSupplier([FromODataUri] int key)
         {
-            return SingleResult.Create(_productRepository.Where(m => m.ProductID == key).Select(m => m.Supplier).AsQueryable());
+            return _productRepository.Where(m => m.ProductID == key).Select(m => m.Supplier).AsQueryable();
         }
     }
 }

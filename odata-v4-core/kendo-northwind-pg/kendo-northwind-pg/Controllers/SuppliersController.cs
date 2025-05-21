@@ -33,9 +33,9 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Suppliers({key})")]
-        public SingleResult<Supplier> GetSupplier([FromODataUri] int key)
+        public IQueryable<Supplier> GetSupplier([FromODataUri] int key)
         {
-            return SingleResult.Create(db.Suppliers.Where(supplier => supplier.SupplierID == key));
+            return db.Suppliers.Where(supplier => supplier.SupplierID == key);
         }
 
         // PUT: odata/Suppliers(5)
