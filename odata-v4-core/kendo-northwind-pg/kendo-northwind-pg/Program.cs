@@ -3,11 +3,14 @@ using kendo_northwind_pg.Controllers;
 using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
 using kendo_northwind_pg.Data.Repositories;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Batch;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System;
 
 
 
@@ -17,6 +20,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 var edmModel = OdataModels.GetEdmModel();
 var batchHandler = new DefaultODataBatchHandler();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+});
 
 builder.Services.AddControllersWithViews()
     .AddSessionStateTempDataProvider()
@@ -28,7 +36,7 @@ builder.Services.AddControllersWithViews()
                             .Filter()
                             .Count()
                             .Expand()
-                            .AddRouteComponents("odata", edmModel, batchHandler));
+                            .AddRouteComponents("", edmModel, batchHandler));
 builder.Services.AddSession();
 
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "sample.db");
@@ -81,6 +89,7 @@ bool IsOriginAllowed(string origin)
     var uri = new Uri(origin);
     var allowedDomains = new string[] {
         "jquery-demos-staging.azurewebsites.net",
+        "sitdemos.telerik.com",
         "127.0.0.1",
         "telerik.com",
         "demos.telerik.com",
@@ -147,10 +156,11 @@ app.UseSession();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors("CorsPolicy");
+app.UseForwardedHeaders();
+app.UseMiddleware<ODataBatchBodyPreProcessMiddleware>();
 app.UseODataBatching();
-app.UseRouting();
-app.UseSession();
 app.UseMiddleware<ODataBatchHttpContextMiddleware>();
+app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllerRoute(
