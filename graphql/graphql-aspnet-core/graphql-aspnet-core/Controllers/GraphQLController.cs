@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace graphql_aspnet_core.Controllers
 {
-    [Route("[controller]")]
+    [Route("")]
     public class GraphQLController : Controller
     {
         private readonly IDocumentExecuter _documentExecuter;
