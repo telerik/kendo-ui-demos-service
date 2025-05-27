@@ -66,6 +66,8 @@ bool IsOriginAllowed(string origin)
 {
     var uri = new Uri(origin);
     var allowedDomains = new string[] {
+        "aspnet-core-demos-staging.azurewebsites.net",
+        "aspnet-mvc-demos-staging.azurewebsites.net",
         "jquery-demos-staging.azurewebsites.net",
         "telerik.com",
         "demos.telerik.com",
