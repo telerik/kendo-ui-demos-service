@@ -96,10 +96,13 @@ bool IsOriginAllowed(string origin)
         "telerik.com",
         "demos.telerik.com",
         "dojo.telerik.com",
+        "stackblitz.com",
+        "codesandbox.io",
         "runner.telerik.io"
     };
     var wildcardDomains = new string[] {
         "stackblitz.io",
+        "telerik.com",
         "csb.app",
     };
 
