@@ -43,7 +43,7 @@ namespace KendoCoreService.Controllers
                 messages.Prepend(new ChatMessage(ChatRole.System, DefaultSystemPrompt));
             }
 
-            var response = await _chatClient.CompleteAsync(messages, options);
+            var response = await _chatClient.GetResponseAsync(messages, options);
 
             return Json(response);
         }
@@ -53,14 +53,15 @@ namespace KendoCoreService.Controllers
         {
             var tokenizer = GptEncoding.GetEncoding("cl100k_base");
 
-            foreach (var message in messages)
+            for (var i = 0; i < messages.Count; i++)
             {
+                var message = messages[i];
                 var tokens = tokenizer.Encode(message.Text);
 
                 if (tokens.Count > 1000) 
                 {
                     var truncatedTokens = tokens.Take(1000).ToList();
-                    message.Text = tokenizer.Decode(truncatedTokens);
+                    messages[i] = new ChatMessage(message.Role, tokenizer.Decode(truncatedTokens));
                 }
             }
         }
