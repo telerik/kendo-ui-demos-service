@@ -102,6 +102,7 @@ bool IsOriginAllowed(string origin)
     };
     var wildcardDomains = new string[] {
         "stackblitz.io",
+        "webcontainer.io",
         "telerik.com",
         "csb.app",
     };
