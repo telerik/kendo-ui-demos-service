@@ -9,6 +9,7 @@ using KendoCRUDService.Data.Repositories;
 using KendoCRUDService.Filters;
 using KendoCRUDService.Settings;
 using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,11 @@ if (builder.Environment.IsProduction())
     builder.Services.AddChatClient(services => services.GetRequiredService<AzureOpenAIClient>()
         .AsChatClient(builder.Configuration["AI:AzureOpenAI:Chat:ModelId"] ?? "gpt-4o-mini"));
 }
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
@@ -186,6 +192,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("CorsPolicy");
+app.UseForwardedHeaders();
 app.UseFileServer();
 app.UseSession();
 app.UseAuthorization();
