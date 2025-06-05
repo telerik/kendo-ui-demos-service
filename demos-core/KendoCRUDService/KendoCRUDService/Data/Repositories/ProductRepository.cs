@@ -14,18 +14,21 @@ namespace KendoCRUDService.Data.Repositories
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
         private ConcurrentDictionary<string, IList<Product>> _productsByUsers;
+        private readonly ILogger<ProductRepository> _logger;
 
-        public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, ILogger<ProductRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _scopeFactory = scopeFactory;
             _contextAccessor = httpContextAccessor;
             _productsByUsers = new ConcurrentDictionary<string, IList<Product>>();
+            _logger = logger;
         }
 
         public IList<Product> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _logger.LogInformation($"Fetching products for user key: {userKey}");
 
             return _productsByUsers.GetOrAdd(userKey, key =>
             {
