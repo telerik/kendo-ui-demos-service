@@ -20,7 +20,7 @@ namespace signalr_for_aspnet_core.Hubs
         private readonly IChatClient _chatClient;
         private readonly IMemoryCache _memoryCache;
         private readonly IWebHostEnvironment _env;
-        private const int MaxConversationsPerUser = 300; // For testing purposes. Reduce to 3 in production.
+        private const int MaxConversationsPerUser = 3; // For testing purposes. Reduce to 3 in production.
         private const int MaxInputTokensPerConversation = 1000;
         private const int MaxOutputTokensPerConversation = 500;
         private const string DefaultSystemPrompt =
@@ -84,7 +84,7 @@ namespace signalr_for_aspnet_core.Hubs
             {
                 count = 0;
             }
-            if (count >= 3)
+            if (count >= MaxConversationsPerUser)
             {
                 return false;
             }
@@ -214,6 +214,20 @@ namespace signalr_for_aspnet_core.Hubs
             StartNewConversation(userId, userHistory);
 
             await Clients.Caller.SendAsync("ChatReset");
+        }
+
+        // For testing purposes only. Remove in production.
+        public async Task ResetChatLimit()
+        {
+            var ipAddress = Context.GetHttpContext()?.Connection.RemoteIpAddress?.ToString();
+
+            // Reset IP conversation count
+            if (!string.IsNullOrEmpty(ipAddress))
+            {
+                _memoryCache.Remove($"ip_convo_count_{ipAddress}");
+            }
+
+            await Clients.Caller.SendAsync("LimitsReset", "You can start a new conversation.");
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
