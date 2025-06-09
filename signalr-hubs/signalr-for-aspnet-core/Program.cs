@@ -28,5 +28,6 @@ app.UseCors("CorsPolicy");
 app.UseRouting();
 app.MapHealthChecks("/health");
 app.MapHub<ProductHub>("/products");
+app.MapHub<MeetingHub>("/meetings");
 
 app.Run();
