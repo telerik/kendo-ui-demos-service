@@ -75,6 +75,7 @@ bool IsOriginAllowed(string origin)
         "aspnet-core-demos-staging.azurewebsites.net",
         "aspnet-mvc-demos-staging.azurewebsites.net",
         "jquery-demos-staging.azurewebsites.net",
+        "wwwsit.telerik.com",
         "telerik.com",
         "demos.telerik.com",
         "127.0.0.1",
