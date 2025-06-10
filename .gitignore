@@ -179,6 +179,9 @@ UpgradeLog*.htm
 *.bim.layout
 *.bim_*.settings
 
+# dev app settings files
+*appsettings.Development.json
+
 # Microsoft Fakes
 FakesAssemblies/
 
