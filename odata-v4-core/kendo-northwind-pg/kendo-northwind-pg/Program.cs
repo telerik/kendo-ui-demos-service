@@ -93,6 +93,7 @@ bool IsOriginAllowed(string origin)
         "jquery-demos-staging.azurewebsites.net",
         "sitdemos.telerik.com",
         "127.0.0.1",
+        "wwwsit.telerik.com",
         "telerik.com",
         "demos.telerik.com",
         "dojo.telerik.com",
