@@ -36,7 +36,7 @@ builder.Services.AddControllersWithViews()
                             .Filter()
                             .Count()
                             .Expand()
-                            .AddRouteComponents("", edmModel, batchHandler));
+                            .AddRouteComponents("", edmModel, batchHandler).TimeZone = TimeZoneInfo.Utc);
 builder.Services.AddSession();
 
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "sample.db");
