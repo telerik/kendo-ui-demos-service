@@ -13,7 +13,7 @@ namespace kendo_northwind_pg.Data.Models
         public string CustomerID { get; set; }
         public int? EmployeeID { get; set; }
         public decimal? Freight { get; set; }
-        public DateTime? OrderDate { get; set; }
+        public DateTimeOffset? OrderDate { get; set; }
         public string RequiredDate { get; set; }
         public string ShipAddress { get; set; }
         public string ShipCity { get; set; }
