@@ -20,7 +20,7 @@ namespace KendoCRUDService.Controllers
             _contextFactory = contextFactory;
         }
 
-        public ActionResult Index(DataFilter filter)
+        public ActionResult Index([FromBody] DataFilter filter)
         {
             var dateFrom = MIN_DATE;
             var dateTo = DateTime.Now;
