@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,29 +14,29 @@ namespace kendo_northwind_pg.Controllers
 {
     public class GanttDependenciesController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly GanttDependencyRepository _ganttDependencies;
 
-        public GanttDependenciesController(DemoDbContext demoDbContext)
+        public GanttDependenciesController(GanttDependencyRepository ganttDependencies)
         {
-            db = demoDbContext;
+            _ganttDependencies = ganttDependencies;
         }
 
         // GET: odata/GanttDependencies
         [HttpGet]
         [EnableQuery]
         [Route("GanttDependencies")]
-        public IQueryable<GanttDependency> Get()
+        public IEnumerable<GanttDependency> Get()
         {
-            return db.GanttDependencies;
+            return _ganttDependencies.All();
         }
 
         // GET: odata/GanttDependencies(5)
         [HttpGet]
         [EnableQuery]
         [Route("GanttDependencies({key})")]
-        public IQueryable<GanttDependency> Get([FromODataUri] int key)
+        public IEnumerable<GanttDependency> Get([FromODataUri] int key)
         {
-            return db.GanttDependencies.Where(gp => gp.Id == key);
+            return _ganttDependencies.Where(gp => gp.Id == key);
         }
 
         // PUT: odata/GanttDependencies(5)
@@ -53,23 +54,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(ganttDependency).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DependencyExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _ganttDependencies.Update(ganttDependency);
 
             return Updated(ganttDependency);
         }
@@ -84,23 +69,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.GanttDependencies.Add(ganttDependency);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateException)
-            {
-                if (DependencyExists(ganttDependency.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _ganttDependencies.Insert(ganttDependency);
 
             return Created(ganttDependency);
         }
@@ -115,29 +84,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            GanttDependency ganttDependency = db.GanttDependencies.Find(key);
+            GanttDependency ganttDependency = _ganttDependencies.Where(gp => gp.Id == key).First();
             if (ganttDependency == null)
             {
                 return NotFound();
             }
 
             patch.Patch(ganttDependency);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DependencyExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(ganttDependency);
         }
@@ -147,21 +100,15 @@ namespace kendo_northwind_pg.Controllers
         [Route("GanttDependencies({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            GanttDependency ganttDependency = db.GanttDependencies.Find(key);
+            GanttDependency ganttDependency = _ganttDependencies.Where(gp => gp.Id == key).First();
             if (ganttDependency == null)
             {
                 return NotFound();
             }
 
-            db.GanttDependencies.Remove(ganttDependency);
-            db.SaveChanges();
+            _ganttDependencies.Delete(ganttDependency);
 
             return StatusCode(204);
-        }
-
-        private bool DependencyExists(int key)
-        {
-            return db.GanttDependencies.Count(e => e.Id == key) > 0;
         }
     }
 }

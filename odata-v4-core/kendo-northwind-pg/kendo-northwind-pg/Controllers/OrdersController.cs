@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,20 +14,20 @@ namespace kendo_northwind_pg.Controllers
 {
     public class OrdersController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly OrdersRepository _ordersRepository;
 
-        public OrdersController(DemoDbContext demoDbContext)
+        public OrdersController(OrdersRepository ordersRepository)
         {
-            db = demoDbContext;
+            _ordersRepository = ordersRepository;
         }
 
         // GET: odata/Orders
         [HttpGet]
         [EnableQuery]
         [Route("Orders")]
-        public IQueryable<Order> GetOrders()
+        public IEnumerable<Order> GetOrders()
         {
-            return db.Orders;
+            return _ordersRepository.All();
         }
 
         // GET: odata/Orders(5)
@@ -35,7 +36,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Orders({key})")]
         public IEnumerable<Order> GetOrder([FromODataUri] int key)
         {
-            return db.Orders.Where(order => order.OrderID == key);
+            return _ordersRepository.Where(order => order.OrderID == key);
         }
 
         // PUT: odata/Orders(5)
@@ -53,23 +54,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(order).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _ordersRepository.Update(order);
 
             return Updated(order);
         }
@@ -84,8 +69,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Orders.Add(order);
-            db.SaveChanges();
+            _ordersRepository.Insert(order);
 
             return Created(order);
         }
@@ -100,29 +84,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Order order = db.Orders.Find(key);
+            Order order = _ordersRepository.Where(x => x.OrderID == key).First();
             if (order == null)
             {
                 return NotFound();
             }
 
             patch.Patch(order);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(order);
         }
@@ -132,15 +100,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("Orders({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            Order order = db.Orders.Find(key);
+            Order order = _ordersRepository.Where(x => x.OrderID == key).First();
             if (order == null)
             {
                 return NotFound();
             }
 
-            db.Orders.Remove(order);
-            db.SaveChanges();
-
+            _ordersRepository.Delete(order);
             return StatusCode(204);
         }
 
@@ -150,7 +116,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Orders({key})/Customer")]
         public IEnumerable<Customer> GetCustomer([FromODataUri] int key)
         {
-            return db.Orders.Where(m => m.OrderID == key).Select(m => m.Customer);
+            return _ordersRepository.Where(m => m.OrderID == key).Select(m => m.Customer);
         }
 
         // GET: odata/Orders(5)/Employee
@@ -159,7 +125,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Orders({key})/Employee")]
         public IEnumerable<Employee> GetEmployee([FromODataUri] int key)
         {
-            return db.Orders.Where(m => m.OrderID == key).Select(m => m.Employee);
+            return _ordersRepository.Where(m => m.OrderID == key).Select(m => m.Employee);
         }
 
         // GET: odata/Orders(5)/Order_Details
@@ -168,7 +134,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Orders({key})/Order_Details")]
         public IQueryable<OrderDetail> GetOrder_Details([FromODataUri] int key)
         {
-            return db.Orders.Where(m => m.OrderID == key).SelectMany(m => m.OrderDetails);
+            return _ordersRepository.Where(m => m.OrderID == key).SelectMany(m => m.OrderDetails).AsQueryable();
         }
 
         // GET: odata/Orders(5)/Shipper
@@ -177,12 +143,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Orders({key})/Shipper")]
         public IEnumerable<Shipper> GetShipper([FromODataUri] int key)
         {
-            return db.Orders.Where(m => m.OrderID == key).Select(m => m.ShipViaNavigation);
-        }
-
-        private bool OrderExists(int key)
-        {
-            return db.Orders.Count(e => e.OrderID == key) > 0;
+            return _ordersRepository.Where(m => m.OrderID == key).Select(m => m.ShipViaNavigation);
         }
     }
 }

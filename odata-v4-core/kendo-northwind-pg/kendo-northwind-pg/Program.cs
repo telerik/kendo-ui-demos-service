@@ -146,6 +146,15 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddDbContext<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 builder.Services.AddSingleton<ProductRepository>();
+builder.Services.AddSingleton<OrdersRepository>();
+builder.Services.AddSingleton<CustomersRepository>();
+builder.Services.AddSingleton<EmployeeRepository>();
+builder.Services.AddSingleton<GanttDependencyRepository>();
+builder.Services.AddSingleton<GanttTaskRepository>();
+builder.Services.AddSingleton<SuppliersRepository>();
+builder.Services.AddSingleton<ShippersRepository>();
+builder.Services.AddSingleton<RegionsRepository>();
+builder.Services.AddSingleton<TerritoriesRepository>();
 
 builder.Services.AddHealthChecks();
 

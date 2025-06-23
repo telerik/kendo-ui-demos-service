@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.DataAnnotations;
 using Microsoft.AspNetCore.OData.Deltas;
@@ -14,28 +15,28 @@ namespace kendo_northwind_pg.Controllers
 {
     public class EmployeesController : ODataController
     {
-        private DemoDbContext db;
+        private readonly EmployeeRepository _employeeRepository;
 
-        public EmployeesController(DemoDbContext demoDbContext)
+        public EmployeesController(EmployeeRepository employeeRepository)
         {
-            db = demoDbContext;
+            _employeeRepository = employeeRepository;
         }
 
         // GET: odata/Employees
         [HttpGet]
         [EnableQuery]
         [Route("Employees")]
-        public IQueryable<Employee> Get()
+        public IEnumerable<Employee> Get()
         {
-            return db.Employees;
+            return _employeeRepository.All();
         }
 
         [HttpGet]
         [EnableQuery]
         [Route("TopEmployees")]
-        public IQueryable<Employee> TopEmployees()
+        public IEnumerable<Employee> TopEmployees()
         {
-            return db.Employees.Where(x => x.ReportsTo == null).Select(x=> new Employee
+            return _employeeRepository.Where(x => x.ReportsTo == null).Select(x=> new Employee
             {
                 Address = x.Address,
                 BirthDate = x.BirthDate,
@@ -69,7 +70,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Employees({key})")]
         public IQueryable<Employee> Get([FromODataUri] int key)
         {
-            return db.Employees.Where(employee => employee.EmployeeID == key);
+            return _employeeRepository.Where(employee => employee.EmployeeID == key).AsQueryable();
         }
 
         // PUT: odata/Employees(5)
@@ -87,23 +88,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(employee).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EmployeeExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _employeeRepository.Update(employee);
 
             return Updated(employee);
         }
@@ -118,8 +103,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Employees.Add(employee);
-            db.SaveChanges();
+            _employeeRepository.Insert(employee);
 
             return Created(employee);
         }
@@ -134,29 +118,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Employee employee = db.Employees.Find(key);
+            Employee employee = _employeeRepository.Where(x => x.EmployeeID == key).First();
             if (employee == null)
             {
                 return NotFound();
             }
 
             patch.Patch(employee);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EmployeeExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(employee);
         }
@@ -166,14 +134,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("[controller]({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            Employee employee = db.Employees.Find(key);
+            Employee employee = _employeeRepository.Where(x => x.EmployeeID == key).First();
             if (employee == null)
             {
                 return NotFound();
             }
 
-            db.Employees.Remove(employee);
-            db.SaveChanges();
+            _employeeRepository.Delete(employee);
 
             return StatusCode(204);
         }
@@ -184,7 +151,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("EmployeeSubordinates({key})")]
         public IEnumerable<Employee> GetSubordinates([FromODataUri] int key)
         {
-            return db.Employees.Where(x => x.ReportsTo == key).Select(x => new Employee
+            return _employeeRepository.Where(x => x.ReportsTo == key).Select(x => new Employee
             {
                 Address = x.Address,
                 BirthDate = x.BirthDate,
@@ -218,7 +185,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("EmployeeManager({key})")]
         public IQueryable<Employee> GetManager([FromODataUri] int key)
         {
-            return db.Employees.Where(m => m.EmployeeID == key).Select(m => m.ReportsToNavigation);
+            return _employeeRepository.Where(m => m.EmployeeID == key).Select(m => m.ReportsToNavigation).AsQueryable();
         }
 
         // GET: odata/EmployeeOrders(5)
@@ -227,7 +194,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("EmployeeOrders({key})")]
         public IQueryable<Order> GetOrders([FromODataUri] int key)
         {
-            return db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.Orders);
+            return _employeeRepository.Where(m => m.EmployeeID == key).SelectMany(m => m.Orders).AsQueryable();
         }
 
         // GET: odata/EmployeeTerritories(5)
@@ -236,12 +203,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("EmployeeTerritories({key})")]
         public IQueryable<Territory> GetTerritories([FromODataUri] int key)
         {
-            return db.Employees.Where(m => m.EmployeeID == key).SelectMany(m => m.EmployeeTerritories.Select(x=> x.Territory));
-        }
-
-        private bool EmployeeExists(int key)
-        {
-            return db.Employees.Count(e => e.EmployeeID == key) > 0;
+            return _employeeRepository.Where(m => m.EmployeeID == key).SelectMany(m => m.EmployeeTerritories.Select(x=> x.Territory)).AsQueryable();
         }
     }
 }

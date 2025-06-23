@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,29 +14,29 @@ namespace kendo_northwind_pg.Controllers
 {
     public class CustomersController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly CustomersRepository _customersRepository;
 
-        public CustomersController(DemoDbContext dbContext)
+        public CustomersController(CustomersRepository customersRepository)
         {
-            db = dbContext;
+            _customersRepository = customersRepository;
         }
 
         // GET: odata/Customers
         [HttpGet]
         [EnableQuery]
         [Route("Customers")]
-        public IQueryable<Customer> Get()
+        public IEnumerable<Customer> Get()
         {
-            return db.Customers;
+            return _customersRepository.All();
         }
 
         // GET: odata/Customers(5)
         [HttpGet]
         [EnableQuery]
         [Route("Customers({key})")]
-        public IQueryable<Customer> GetCustomer([FromODataUri] string key)
+        public IEnumerable<Customer> GetCustomer([FromODataUri] string key)
         {
-            return db.Customers.Where(customer => customer.CustomerID == key);
+            return _customersRepository.Where(customer => customer.CustomerID == key);
         }
 
         // PUT: odata/Customers(5)
@@ -53,23 +54,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(customer).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CustomerExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _customersRepository.Update(customer);
 
             return Updated(customer);
         }
@@ -84,23 +69,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Customers.Add(customer);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateException)
-            {
-                if (CustomerExists(customer.CustomerID))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _customersRepository.Insert(customer);
 
             return Created(customer);
         }
@@ -115,29 +84,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Customer customer = db.Customers.Find(key);
+            Customer customer = _customersRepository.Where(x => x.CustomerID == key).First();
             if (customer == null)
             {
                 return NotFound();
             }
 
             patch.Patch(customer);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CustomerExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(customer);
         }
@@ -147,14 +100,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("Customers({key})")]
         public IActionResult Delete([FromODataUri] string key)
         {
-            Customer customer = db.Customers.Find(key);
+            Customer customer = _customersRepository.Where(x => x.CustomerID == key).First();
             if (customer == null)
             {
                 return NotFound();
             }
 
-            db.Customers.Remove(customer);
-            db.SaveChanges();
+            _customersRepository.Delete(customer);
 
             return StatusCode(204);
         }
@@ -163,23 +115,18 @@ namespace kendo_northwind_pg.Controllers
         [HttpGet]
         [EnableQuery]
         [Route("Customers({key})/Orders")]
-        public IQueryable<Order> GetOrders([FromODataUri] string key)
+        public IEnumerable<Order> GetOrders([FromODataUri] string key)
         {
-            return db.Customers.Where(m => m.CustomerID == key).SelectMany(m => m.Orders);
+            return _customersRepository.Where(m => m.CustomerID == key).SelectMany(m => m.Orders);
         }
 
         // GET: odata/Customers(5)/CustomerDemographics
         [HttpGet]
         [EnableQuery]
         [Route("Customers({key})/CustomerDemographics")]
-        public IQueryable<CustomerDemographic> GetCustomerDemographics([FromODataUri] string key)
+        public IEnumerable<CustomerDemographic> GetCustomerDemographics([FromODataUri] string key)
         {
-            return db.Customers.Where(m => m.CustomerID == key).SelectMany(m => m.CustomerCustomerDemo.Select(x=> x.CustomerType));
-        }
-
-        private bool CustomerExists(string key)
-        {
-            return db.Customers.Count(e => e.CustomerID == key) > 0;
+            return _customersRepository.Where(m => m.CustomerID == key).SelectMany(m => m.CustomerCustomerDemo.Select(x=> x.CustomerType));
         }
     }
 }

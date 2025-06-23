@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,20 +14,20 @@ namespace kendo_northwind_pg.Controllers
 {
     public class RegionsController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly RegionsRepository _regions;
 
-        public RegionsController(DemoDbContext demoDbContext)
+        public RegionsController(RegionsRepository regions)
         {
-            db = demoDbContext;
+            _regions = regions;
         }
 
         // GET: odata/Regions
         [HttpGet]
         [EnableQuery]
         [Route("Regions")]
-        public IQueryable<Region> GetRegions()
+        public IEnumerable<Region> GetRegions()
         {
-            return db.Region;
+            return _regions.All();
         }
 
         // GET: odata/Regions(5)
@@ -35,7 +36,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Regions({key})")]
         public IEnumerable<Region> GetRegion([FromODataUri] int key)
         {
-            return db.Region.Where(region => region.RegionID == key);
+            return _regions.Where(region => region.RegionID == key);
         }
 
         // PUT: odata/Regions(5)
@@ -53,23 +54,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(region).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RegionExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _regions.Update(region);
 
             return Updated(region);
         }
@@ -84,23 +69,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Region.Add(region);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateException)
-            {
-                if (RegionExists(region.RegionID))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _regions.Insert(region);
 
             return Created(region);
         }
@@ -115,30 +84,14 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Region region = db.Region.Find(key);
-            
+            Region region = _regions.Where(region => region.RegionID == key).First();
+
             if (region == null)
             {
                 return NotFound();
             }
 
             patch.Patch(region);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RegionExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(region);
         }
@@ -148,14 +101,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("Regions({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            Region region = db.Region.Find(key);
+            Region region = _regions.Where(region => region.RegionID == key).First();
             if (region == null)
             {
                 return NotFound();
             }
 
-            db.Region.Remove(region);
-            db.SaveChanges();
+            _regions.Delete(region);
 
             return StatusCode(204);
         }
@@ -166,12 +118,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Regions({key})/Territories")]
         public IQueryable<Territory> GetTerritories([FromODataUri] int key)
         {
-            return db.Region.Where(m => m.RegionID == key).SelectMany(m => m.Territories);
-        }
-
-        private bool RegionExists(int key)
-        {
-            return db.Region.Count(e => e.RegionID == key) > 0;
+            return _regions.Where(m => m.RegionID == key).SelectMany(m => m.Territories).AsQueryable();
         }
     }
 }
