@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,29 +14,29 @@ namespace kendo_northwind_pg.Controllers
 {
     public class ShippersController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly ShippersRepository _shippers;
 
-        public ShippersController(DemoDbContext demoDbContext)
+        public ShippersController(ShippersRepository shippers)
         {
-            db = demoDbContext;
+            _shippers = shippers;
         }
 
         // GET: odata/Shippers
         [HttpGet]
         [EnableQuery]
         [Route("Shippers")]
-        public IQueryable<Shipper> GetShippers()
+        public IEnumerable<Shipper> GetShippers()
         {
-            return db.Shippers;
+            return _shippers.All();
         }
 
         // GET: odata/Shippers(5)
         [HttpGet]
         [EnableQuery]
         [Route("Shippers({key})")]
-        public IQueryable<Shipper> GetShipper([FromODataUri] int key)
+        public IEnumerable<Shipper> GetShipper([FromODataUri] int key)
         {
-            return db.Shippers.Where(shipper => shipper.ShipperID == key);
+            return _shippers.Where(shipper => shipper.ShipperID == key);
         }
 
         // PUT: odata/Shippers(5)
@@ -53,23 +54,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(shipper).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ShipperExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _shippers.Update(shipper);
 
             return Updated(shipper);
         }
@@ -84,8 +69,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Shippers.Add(shipper);
-            db.SaveChanges();
+            _shippers.Insert(shipper);
 
             return Created(shipper);
         }
@@ -100,29 +84,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Shipper shipper = db.Shippers.Find(key);
+            Shipper shipper = _shippers.Where(x=>x.ShipperID == key).FirstOrDefault();
             if (shipper == null)
             {
                 return NotFound();
             }
 
             patch.Patch(shipper);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ShipperExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(shipper);
         }
@@ -132,14 +100,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("Shippers({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            Shipper shipper = db.Shippers.Find(key);
+            Shipper shipper = _shippers.Where(x => x.ShipperID == key).FirstOrDefault();
             if (shipper == null)
             {
                 return NotFound();
             }
 
-            db.Shippers.Remove(shipper);
-            db.SaveChanges();
+            _shippers.Delete(shipper);
 
             return StatusCode(204);
         }
@@ -150,12 +117,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Shippers({key})/Orders")]
         public IQueryable<Order> GetOrders([FromODataUri] int key)
         {
-            return db.Shippers.Where(m => m.ShipperID == key).SelectMany(m => m.Orders);
-        }
-
-        private bool ShipperExists(int key)
-        {
-            return db.Shippers.Count(e => e.ShipperID == key) > 0;
+            return _shippers.Where(m => m.ShipperID == key).SelectMany(m => m.Orders).AsQueryable();
         }
     }
 }

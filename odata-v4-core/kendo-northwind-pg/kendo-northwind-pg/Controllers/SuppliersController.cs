@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,29 +14,29 @@ namespace kendo_northwind_pg.Controllers
 {
     public class SuppliersController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly SuppliersRepository _suppliers;
 
-        public SuppliersController(DemoDbContext demoDbContext)
+        public SuppliersController(SuppliersRepository suppliers)
         {
-            db = demoDbContext;
+            _suppliers = suppliers;
         }
 
         // GET: odata/Suppliers
         [HttpGet]
         [EnableQuery]
         [Route("Suppliers")]
-        public IQueryable<Supplier> GetSuppliers()
+        public IEnumerable<Supplier> GetSuppliers()
         {
-            return db.Suppliers;
+            return _suppliers.All();
         }
 
         // GET: odata/Suppliers(5)
         [HttpGet]
         [EnableQuery]
         [Route("Suppliers({key})")]
-        public IQueryable<Supplier> GetSupplier([FromODataUri] int key)
+        public IEnumerable<Supplier> GetSupplier([FromODataUri] int key)
         {
-            return db.Suppliers.Where(supplier => supplier.SupplierID == key);
+            return _suppliers.Where(supplier => supplier.SupplierID == key);
         }
 
         // PUT: odata/Suppliers(5)
@@ -53,23 +54,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(supplier).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SupplierExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _suppliers.Update(supplier);
 
             return Updated(supplier);
         }
@@ -84,8 +69,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Suppliers.Add(supplier);
-            db.SaveChanges();
+            _suppliers.Insert(supplier);
 
             return Created(supplier);
         }
@@ -100,29 +84,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Supplier supplier = db.Suppliers.Find(key);
+            Supplier supplier = _suppliers.Where(supplier => supplier.SupplierID == key).First();
             if (supplier == null)
             {
                 return NotFound();
             }
 
             patch.Patch(supplier);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SupplierExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(supplier);
         }
@@ -132,14 +100,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("Suppliers({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            Supplier supplier = db.Suppliers.Find(key);
+            Supplier supplier = _suppliers.Where(supplier => supplier.SupplierID == key).First();
             if (supplier == null)
             {
                 return NotFound();
             }
 
-            db.Suppliers.Remove(supplier);
-            db.SaveChanges();
+            _suppliers.Delete(supplier);
 
             return StatusCode(204);
         }
@@ -150,12 +117,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Suppliers({key})/Products")]
         public IQueryable<Product> GetProducts([FromODataUri] int key)
         {
-            return db.Suppliers.Where(m => m.SupplierID == key).SelectMany(m => m.Products);
-        }
-
-        private bool SupplierExists(int key)
-        {
-            return db.Suppliers.Count(e => e.SupplierID == key) > 0;
+            return _suppliers.Where(m => m.SupplierID == key).SelectMany(m => m.Products).AsQueryable();
         }
     }
 }

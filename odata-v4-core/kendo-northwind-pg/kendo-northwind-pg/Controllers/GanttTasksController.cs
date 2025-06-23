@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,29 +14,29 @@ namespace kendo_northwind_pg.Controllers
 {
     public class GanttTasksController : ODataController
     {
-        private readonly DemoDbContext db;
+        private readonly GanttTaskRepository _ganttTasks;
 
-        public GanttTasksController(DemoDbContext demoDbContext)
+        public GanttTasksController(GanttTaskRepository ganttTasks)
         {
-            db = demoDbContext;
+            _ganttTasks = ganttTasks;
         }
 
         // GET: odata/GanttTasks
         [HttpGet]
         [EnableQuery]
         [Route("GanttTasks")]
-        public IQueryable<GanttTask> Get()
+        public IEnumerable<GanttTask> Get()
         {
-            return db.GanttTasks;
+            return _ganttTasks.All();
         }
 
         // GET: odata/GanttTasks(5)
         [HttpGet]
         [EnableQuery]
         [Route("GanttTasks({key})")]
-        public IQueryable<GanttTask> Get([FromODataUri] int key)
+        public IEnumerable<GanttTask> Get([FromODataUri] int key)
         {
-            return db.GanttTasks.Where(gp => gp.Id == key);
+            return _ganttTasks.Where(gp => gp.Id == key);
         }
 
         // PUT: odata/GanttDependencies(5)
@@ -53,23 +54,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(ganttTask).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TaskExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _ganttTasks.Update(ganttTask);
 
             return Updated(ganttTask);
         }
@@ -84,23 +69,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.GanttTasks.Add(ganttTask);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateException)
-            {
-                if (TaskExists(ganttTask.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _ganttTasks.Insert(ganttTask);
 
             return Created(ganttTask);
         }
@@ -115,29 +84,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            GanttTask ganttTask = db.GanttTasks.Find(key);
+            GanttTask ganttTask = _ganttTasks.Where(x => x.Id == key).First(); 
             if (ganttTask == null)
             {
                 return NotFound();
             }
 
             patch.Patch(ganttTask);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TaskExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(ganttTask);
         }
@@ -147,21 +100,15 @@ namespace kendo_northwind_pg.Controllers
         [Route("GanttTasks({key})")]
         public IActionResult Delete([FromODataUri] int key)
         {
-            GanttTask ganttTask = db.GanttTasks.Find(key);
+            GanttTask ganttTask = _ganttTasks.Where(x => x.Id == key).First();
             if (ganttTask == null)
             {
                 return NotFound();
             }
 
-            db.GanttTasks.Remove(ganttTask);
-            db.SaveChanges();
+            _ganttTasks.Delete(ganttTask);
 
             return StatusCode(204);
-        }
-
-        private bool TaskExists(int key)
-        {
-            return db.GanttDependencies.Count(e => e.Id == key) > 0;
         }
     }
 }

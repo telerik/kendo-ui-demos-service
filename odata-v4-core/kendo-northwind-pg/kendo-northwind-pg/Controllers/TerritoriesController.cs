@@ -1,5 +1,6 @@
 ﻿using kendo_northwind_pg.Data;
 using kendo_northwind_pg.Data.Models;
+using kendo_northwind_pg.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -13,29 +14,28 @@ namespace kendo_northwind_pg.Controllers
 {
     public class TerritoriesController : ODataController
     {
-        private readonly DemoDbContext db;
-
-        public TerritoriesController(DemoDbContext demoDbContext)
+        private readonly TerritoriesRepository _territories;
+        public TerritoriesController(TerritoriesRepository territories)
         {
-            db = demoDbContext;
+            _territories = territories;
         }
 
         // GET: odata/Territories
         [HttpGet]
         [EnableQuery]
         [Route("Territories")]
-        public IQueryable<Territory> GetTerritories()
+        public IEnumerable<Territory> GetTerritories()
         {
-            return db.Territories;
+            return _territories.All();
         }
 
         // GET: odata/Territories(5)
         [HttpGet]
         [EnableQuery]
         [Route("Territories({key})")]
-        public IQueryable<Territory> GetTerritory([FromODataUri] string key)
+        public IEnumerable<Territory> GetTerritory([FromODataUri] string key)
         {
-            return db.Territories.Where(territory => territory.TerritoryID == key);
+            return _territories.Where(territory => territory.TerritoryID == key);
         }
 
         // PUT: odata/Territories(5)
@@ -53,23 +53,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest();
             }
 
-            db.Entry(territory).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TerritoryExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _territories.Update(territory);
 
             return Updated(territory);
         }
@@ -84,23 +68,7 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.Territories.Add(territory);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateException)
-            {
-                if (TerritoryExists(territory.TerritoryID))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _territories.Insert(territory);
 
             return Created(territory);
         }
@@ -115,29 +83,13 @@ namespace kendo_northwind_pg.Controllers
                 return BadRequest(ModelState);
             }
 
-            Territory territory = db.Territories.Find(key);
+            Territory territory = _territories.Where(x => x.TerritoryID == key).First();
             if (territory == null)
             {
                 return NotFound();
             }
 
             patch.Patch(territory);
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TerritoryExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
             return Updated(territory);
         }
@@ -147,14 +99,13 @@ namespace kendo_northwind_pg.Controllers
         [Route("Territories({key})")]
         public IActionResult Delete([FromODataUri] string key)
         {
-            Territory territory = db.Territories.Find(key);
+            Territory territory = _territories.Where(x => x.TerritoryID == key).First();
             if (territory == null)
             {
                 return NotFound();
             }
 
-            db.Territories.Remove(territory);
-            db.SaveChanges();
+            _territories.Delete(territory);
 
             return StatusCode(204);
         }
@@ -165,7 +116,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Territories({key})/Region")]
         public IQueryable<Region> GetRegion([FromODataUri] string key)
         {
-            return db.Territories.Where(m => m.TerritoryID == key).Select(m => m.Region);
+            return _territories.Where(m => m.TerritoryID == key).Select(m => m.Region).AsQueryable();
         }
 
         // GET: odata/Territories(5)/Employees
@@ -174,12 +125,7 @@ namespace kendo_northwind_pg.Controllers
         [Route("Territories({key})/Employees")]
         public IQueryable<Employee> GetEmployees([FromODataUri] string key)
         {
-            return db.Territories.Where(m => m.TerritoryID == key).SelectMany(m => m.EmployeeTerritories.Select(x=> x.Employee));
-        }
-
-        private bool TerritoryExists(string key)
-        {
-            return db.Territories.Count(e => e.TerritoryID == key) > 0;
+            return _territories.Where(m => m.TerritoryID == key).SelectMany(m => m.EmployeeTerritories.Select(x=> x.Employee)).AsQueryable();
         }
     }
 }
