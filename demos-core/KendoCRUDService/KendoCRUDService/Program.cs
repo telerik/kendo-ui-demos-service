@@ -78,6 +78,7 @@ bool IsOriginAllowed(string origin)
         "aspnet-core-demos-test.azurewebsites.net",
         "aspnet-mvc-demos-test.azurewebsites.net",
         "jquery-demos-test.azurewebsites.net",
+        "blazor-repl-server-staging.azurewebsites.net",
         "wwwsit.telerik.com",
         "telerik.com",
         "demos.telerik.com",
