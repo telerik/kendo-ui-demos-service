@@ -1,6 +1,3 @@
-using Azure;
-using Azure.AI.OpenAI;
-using Microsoft.Extensions.AI;
 using KendoCRUDService.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -14,20 +11,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<ApiKeySettings>(builder.Configuration.GetSection("ApiKeys"));
-
-if (builder.Environment.IsProduction())
-{
-    builder.Services.AddSingleton(
-    new AzureOpenAIClient(
-        new Uri(builder.Configuration["AI:AzureOpenAI:Endpoint"] ??
-            throw new InvalidOperationException("The required AzureOpenAI endpoint was not configured for this application.")),
-        new AzureKeyCredential(builder.Configuration["AI:AzureOpenAI:Key"] ??
-            throw new InvalidOperationException("The required AzureOpenAI Key was not configured for this application."))
-    ));
-
-    builder.Services.AddChatClient(services => services.GetRequiredService<AzureOpenAIClient>()
-        .AsChatClient(builder.Configuration["AI:AzureOpenAI:Chat:ModelId"] ?? "gpt-4o-mini"));
-}
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
