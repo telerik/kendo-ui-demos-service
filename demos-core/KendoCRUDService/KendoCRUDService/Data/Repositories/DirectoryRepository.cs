@@ -320,9 +320,18 @@ namespace KendoCRUDService.Data.Repositories
 
             if (entry.IsDirectory)
             {
-                var newDirectory = Directory.CreateDirectory(physicalTarget);
-                newEntry = CopyDirectory(new DirectoryInfo(physicalPath), newDirectory);
-                newDirectory.Delete();
+                var affectedEntries = Content().Where(x => x.Path.Contains(entry.Path)).ToList();
+                if (affectedEntries.Any())
+                {
+                    foreach (var item in affectedEntries)
+                    {
+                        var newItem = item.Clone();
+                        newItem.Path = item.Path.Replace(physicalPath, physicalTarget);
+                        Content().Add(newItem);
+                    }
+                }
+
+                newEntry = Content().FirstOrDefault(x => x.Path == physicalTarget);
             }
             else
             {
@@ -345,40 +354,6 @@ namespace KendoCRUDService.Data.Repositories
 
             return entry;
         }
-
-        public FileManagerEntry CopyDirectory(DirectoryInfo source, DirectoryInfo target)
-        {
-            var currentEntries = Content();
-            var currentEntry = currentEntries.FirstOrDefault(x => x.Path == source.FullName);
-
-            var newEntry = currentEntry.Clone();
-            newEntry.Path = target.FullName;
-            currentEntries.Add(newEntry);
-
-            foreach (FileInfo fi in source.GetFiles())
-            {
-                Console.WriteLine(@"Copying {0}\{1}", target.FullName, fi.Name);
-                if (IsValidFile(fi.FullName)) 
-                {
-                    CopyFile(fi.FullName, Path.Combine(target.FullName, fi.Name));
-                }
-                
-            }
-
-            // Copy each subdirectory using recursion.
-            foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
-            {
-                DirectoryInfo nextTargetSubDir =
-                    target.CreateSubdirectory(diSourceSubDir.Name);
-                CopyDirectory(diSourceSubDir, nextTargetSubDir);
-                target.Delete();
-            }
-
-            UpdateContent(currentEntries);
-
-            return currentEntry;
-        }
-
 
 
         public virtual bool AuthorizeUpload(string path, IFormFile file)
@@ -426,6 +401,9 @@ namespace KendoCRUDService.Data.Repositories
 
         public string NormalizePath(string path)
         {
+            if (Path.IsPathRooted(path) || path.Contains(".."))
+                throw new ArgumentException("Invalid path segment.", nameof(path));
+
             if (string.IsNullOrEmpty(path))
             {
                 return ContentPath;
