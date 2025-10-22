@@ -401,10 +401,11 @@ namespace KendoCRUDService.Data.Repositories
 
         public string NormalizePath(string path)
         {
-            if (Path.IsPathRooted(path) || path.Contains(".."))
+            var containsPath = !string.IsNullOrEmpty(path);
+            if (containsPath && path.Contains(".."))
                 throw new ArgumentException("Invalid path segment.", nameof(path));
 
-            if (string.IsNullOrEmpty(path))
+            if (!containsPath)
             {
                 return ContentPath;
             }
