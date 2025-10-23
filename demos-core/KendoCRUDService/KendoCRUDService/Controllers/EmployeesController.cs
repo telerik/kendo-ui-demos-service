@@ -54,6 +54,53 @@ namespace KendoCRUDService.Controllers
 
             return Json(result);
         }
+
+        public ActionResult ValueMapper(int?[] values)
+        {
+            var indices = new List<List<int?>>();
+
+            var employees = _employeeRepository.All();
+
+            if (values != null && values.Any())
+            {
+                foreach (var value in values)
+                {
+                    var idSequence = new List<int?>();
+
+                    var item = employees.FirstOrDefault(e => e.EmployeeId == value);
+                    if (item != null)
+                    {
+                        idSequence.Insert(0, item.EmployeeId);
+
+                        if (item.ReportsTo != null)
+                        {
+                            while (true)
+                            {
+                                var parentItem = employees.FirstOrDefault(e => e.EmployeeId == item.ReportsTo);
+
+                                if (parentItem == null)
+                                {
+                                    break;
+                                }
+                                else if (parentItem.ReportsTo == null)
+                                {
+                                    idSequence.Insert(0, parentItem.EmployeeId);
+                                    break;
+                                }
+
+                                idSequence.Insert(0, parentItem.EmployeeId);
+                                item = parentItem;
+                            }
+
+                        }
+                    }
+
+                    indices.Add(idSequence);
+                }
+            }
+
+            return Json(indices);
+        }
     }
 
     public class EmployeeComparer : IEqualityComparer<EmployeeCompleteViewModel>
