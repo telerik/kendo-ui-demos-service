@@ -272,6 +272,9 @@ namespace KendoCRUDService.Data.Repositories
             entry.CreatedUtc = DateTime.UtcNow;
             entry.Modified = DateTime.Now;
             entry.ModifiedUtc = DateTime.UtcNow;
+            entry.IsDirectory = true;
+
+            currentEntries.Where(x=>x.Path.Contains(path) && x.IsDirectory == true).ToList().ForEach(x=> x.HasDirectories = true);
             currentEntries.Add(entry);
 
             UpdateContent(currentEntries);
