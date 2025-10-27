@@ -3,6 +3,7 @@ using KendoCRUDService.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace KendoCRUDService.Data.Repositories
 {
@@ -71,7 +72,7 @@ namespace KendoCRUDService.Data.Repositories
                 IsDirectory = entry.IsDirectory,
                 Modified = entry.Modified,
                 ModifiedUtc = entry.ModifiedUtc,
-                Name = entry.Name,
+                Name = Path.GetFileNameWithoutExtension(entry.Name),
                 Path = entry.Path.Replace(ContentPath + "/", "").Replace(@"\", "/"),
                 Size = entry.Size
             };
@@ -196,9 +197,17 @@ namespace KendoCRUDService.Data.Repositories
             var currentEntries = Content();
             var path = NormalizePath(entry.Path);
 
-            currentEntries.RemoveAll(x => x.Path.Contains(path));
+            currentEntries.RemoveAll(x => x.Path == path);
+
+            var parent = GetParentFolder(path);
 
             UpdateContent(currentEntries);
+
+            bool hasChildren = HasChildFolders(parent.Path);
+
+            if (parent != null && !hasChildren) {
+                parent.HasDirectories = false;
+            }
         }
 
         public FileManagerEntry Create(FileManagerEntry entry, string target)
@@ -274,7 +283,12 @@ namespace KendoCRUDService.Data.Repositories
             entry.ModifiedUtc = DateTime.UtcNow;
             entry.IsDirectory = true;
 
-            currentEntries.Where(x=>x.Path.Contains(path) && x.IsDirectory == true).ToList().ForEach(x=> x.HasDirectories = true);
+            var parent = GetParentFolder(physicalPath);
+
+            if (parent != null)
+            {
+                parent.HasDirectories = true;
+            }
             currentEntries.Add(entry);
 
             UpdateContent(currentEntries);
@@ -295,22 +309,36 @@ namespace KendoCRUDService.Data.Repositories
 
             if (entry.IsDirectory)
             {
-                while (Directory.Exists(physicalTarget))
+                while (Content().Where(x => x.Path == physicalTarget).Count() > 0)
                 {
                     tempName = entry.Name + String.Format("({0})", ++sequence);
                     physicalTarget = Path.Combine(NormalizePath(target), tempName);
                 }
+
+                entry.Name = tempName;
             }
             else
             {
-                while (System.IO.File.Exists(physicalTarget))
+                while (Content().Where(x => x.Path == physicalTarget).Count() > 0)
                 {
                     tempName = entry.Name + String.Format("({0})", ++sequence) + entry.Extension;
                     physicalTarget = Path.Combine(NormalizePath(target), tempName);
                 }
+                entry.Name = tempName;
             }
 
             return physicalTarget;
+        }
+
+        private FileManagerEntry GetParentFolder(string path)
+        {
+            var parentPath = path.Contains("/") ? path.Substring(0, path.LastIndexOf("/")) : path;
+            return Content().Where(x => x.Path.Equals(parentPath) && x.IsDirectory == true).FirstOrDefault();
+        }
+
+        private bool HasChildFolders(string path)
+        {
+            return Content().Any(x => x.Path.StartsWith(path+ "/") && x.IsDirectory == true && x.Path != path);
         }
 
         public virtual FileManagerEntry CopyEntry(string target, FileManagerEntry entry)
@@ -323,6 +351,13 @@ namespace KendoCRUDService.Data.Repositories
 
             if (entry.IsDirectory)
             {
+                var parent = GetParentFolder(path);
+
+                if (parent != null)
+                {
+                    parent.HasDirectories = true;
+                }
+
                 var affectedEntries = Content().Where(x => x.Path.Contains(entry.Path)).ToList();
                 if (affectedEntries.Any())
                 {
@@ -341,7 +376,7 @@ namespace KendoCRUDService.Data.Repositories
                 newEntry = CopyFile(physicalPath, physicalTarget);
             }
 
-            return newEntry;
+            return VirtualizePath(newEntry);
         }
 
         private FileManagerEntry CopyFile(string source, string target)
@@ -355,7 +390,7 @@ namespace KendoCRUDService.Data.Repositories
 
             UpdateContent(currentEntries);
 
-            return entry;
+            return newEntry;
         }
 
 
