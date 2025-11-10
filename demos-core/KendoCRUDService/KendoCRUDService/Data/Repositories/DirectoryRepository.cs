@@ -203,10 +203,15 @@ namespace KendoCRUDService.Data.Repositories
 
             UpdateContent(currentEntries);
 
-            bool hasChildren = HasChildFolders(parent.Path);
+            bool hasChildren = false;
 
-            if (parent != null && !hasChildren) {
-                parent.HasDirectories = false;
+            if (parent != null)
+            {
+                hasChildren = HasChildFolders(parent.Path);
+                if (!hasChildren)
+                {
+                    parent.HasDirectories = false;
+                }
             }
         }
 
