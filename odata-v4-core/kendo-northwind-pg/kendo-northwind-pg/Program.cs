@@ -70,7 +70,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-
+builder.Services.AddMemoryCache();
 
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
@@ -147,6 +147,7 @@ builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
         .AllowCredentials();
 }));
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IUserDataCache, UserDataCache>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddDbContext<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 builder.Services.AddSingleton<ProductRepository>();

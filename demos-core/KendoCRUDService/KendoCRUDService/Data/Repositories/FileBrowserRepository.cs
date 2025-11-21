@@ -1,8 +1,9 @@
 ﻿using KendoCRUDService.Data.Models;
-using KendoCRUDService.FileBrowser;
 using KendoCRUDService.Extensions;
+using KendoCRUDService.FileBrowser;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.Mime;
 
@@ -19,19 +20,23 @@ namespace KendoCRUDService.Data.Repositories
                 return Path.Combine(hostingEnvironment.ContentRootPath, ContentRootPath);
             }
         }
-        private ConcurrentDictionary<string, List<FileBrowserEntry>> _entries;
-        private Dictionary<string, byte[]> _files;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<FileBrowserRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "filebrowser";
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly IWebHostEnvironment hostingEnvironment;
         private ThumbnailCreator thumbnailCreator;
 
 
-        public FileBrowserRepository(IWebHostEnvironment _hostingEnvironment, IHttpContextAccessor contextAccessor)
+        public FileBrowserRepository(IWebHostEnvironment _hostingEnvironment, IHttpContextAccessor contextAccessor, IUserDataCache userCache,
+            ILogger<FileBrowserRepository> logger)
         {
             hostingEnvironment = _hostingEnvironment;
             _contextAccessor = contextAccessor;
-            _files = new Dictionary<string, byte[]>();
-            _entries = new ConcurrentDictionary<string, List<FileBrowserEntry>>();
+            _userCache = userCache;
+            _logger = logger;
             thumbnailCreator = new ThumbnailCreator();
         }
 
@@ -39,7 +44,8 @@ namespace KendoCRUDService.Data.Repositories
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
             List<FileBrowserEntry> entries = new List<FileBrowserEntry>();
-            _entries.TryGetValue(SessionUtils.GetUserKey(_contextAccessor), out entries);
+
+            _userCache.TryGetList(userKey, LogicalName, out entries);
 
             return entries;
         }
@@ -48,10 +54,10 @@ namespace KendoCRUDService.Data.Repositories
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            var entries = _entries.GetOrAdd(userKey, key =>
+            var entries = _userCache.GetOrCreateList<FileBrowserEntry>(userKey, LogicalName, () =>
             {
                 return GetAll(ContentPath, filter).ToList();
-            });
+            },Ttl, sliding: true);
 
             var virtualized = entries.Where(d => TargetMatch(path, d.Path)).Select(VirtualizePath);
 
@@ -152,9 +158,15 @@ namespace KendoCRUDService.Data.Repositories
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
             var normalizedPath = NormalizePath((path ?? ""));
-            if (_files.ContainsKey(userKey + normalizedPath))
+            var files = _userCache.GetOrCreateDictionary(userKey,
+                "filedata",
+                () => new Dictionary<string, byte[]>(),
+                Ttl,
+                sliding: true
+            );
+            if (files.ContainsKey(userKey + normalizedPath))
             {
-                return _files[userKey + normalizedPath];
+                return files[userKey + normalizedPath];
             }
             else if (File.Exists(normalizedPath))
             {
@@ -170,13 +182,26 @@ namespace KendoCRUDService.Data.Repositories
             var directory = NormalizePath(path ?? "");
             var normalizedPath = directory + fileName;
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            
+
             if (AuthorizeUpload(directory, file))
             {
                 using (var ms = new MemoryStream())
                 {
                     file.CopyTo(ms);
-                    _files.Add(userKey + normalizedPath, ms.ToArray());
+                    var files = _userCache.GetOrCreateDictionary(userKey,
+                        "filedata",
+                        () => new Dictionary<string, byte[]>(),
+                        Ttl,
+                        sliding: true
+                    );
+                    files.Add(userKey + normalizedPath, ms.ToArray());
+                    _userCache.SetDictionary(
+                        userKey,
+                        "filedata",
+                        files,
+                        Ttl,
+                        sliding: true
+                    );
                 }
 
                 FileBrowserEntry newEntry = new FileBrowserEntry
@@ -198,7 +223,13 @@ namespace KendoCRUDService.Data.Repositories
         private void UpdateContent(List<FileBrowserEntry> entries)
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            _entries[userKey] = entries;
+            _userCache.SetList<FileBrowserEntry>(
+                userKey,
+                LogicalName,
+                entries,
+                Ttl,
+                sliding: true
+            );
         }
 
         public void Create(string path, FileBrowserEntry entry)
