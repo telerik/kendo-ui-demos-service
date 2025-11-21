@@ -126,6 +126,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+builder.Services.AddMemoryCache();
 
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
@@ -140,6 +141,7 @@ var connection = new SqliteConnection(connectionString)
     DefaultTimeout = 1000,
 };
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IUserDataCache, UserDataCache>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddSignalR();
 builder.Services.AddDbContextFactory<DemoDbContext>(options => options.UseSqlite(connection).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
