@@ -1,7 +1,8 @@
 ﻿using KendoCRUDService.Data.Models;
-using KendoCRUDService.Models;
 using KendoCRUDService.Extensions;
+using KendoCRUDService.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
@@ -11,29 +12,51 @@ namespace KendoCRUDService.Data.Repositories
         private bool UpdateDatabase = false;
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<GanttResourceAssignment>> _resourceAssignments;
         private IHttpContextAccessor _contextAccessor;
 
-        public GanttResourceAssignmentsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<GanttResourceAssignmentsRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "GanttResourceAssignments";
+
+        public GanttResourceAssignmentsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<GanttResourceAssignmentsRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _resourceAssignments = new ConcurrentDictionary<string, IList<GanttResourceAssignment>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<GanttResourceAssignment> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _resourceAssignments.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<GanttResourceAssignment>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
                     return context.GanttResourceAssignments.ToList();
                 }
-            });
+            },Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<GanttResourceAssignment> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<GanttResourceAssignment>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public GanttResourceAssignment One(Func<GanttResourceAssignment, bool> predicate)
@@ -51,7 +74,8 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(GanttResourceAssignment assignment)
         {
-            var first = All().OrderByDescending(a => a.ID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(a => a.ID).FirstOrDefault();
             var id = 0;
 
             if (first != null)
@@ -61,7 +85,8 @@ namespace KendoCRUDService.Data.Repositories
 
             assignment.ID = id + 1;
 
-            All().Add(assignment);
+            entries.Add(assignment);
+            UpdateContent(entries);
         }
 
         public void Update(IEnumerable<GanttResourceAssignment> assigments)
@@ -95,7 +120,9 @@ namespace KendoCRUDService.Data.Repositories
             var target = One(a => a.ID == assigment.ID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
     }

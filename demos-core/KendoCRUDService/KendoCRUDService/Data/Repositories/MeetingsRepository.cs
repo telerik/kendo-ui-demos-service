@@ -8,26 +8,27 @@ namespace KendoCRUDService.Data.Repositories
 {
     public class MeetingsRepository
     {
-        private bool UpdateDatabase = false;
-
-        private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<MeetingViewModel>> _meetings;
         private IHttpContextAccessor _contextAccessor;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<MeetingsRepository> _logger;
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Meetings";
 
-        public MeetingsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public MeetingsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<MeetingsRepository> logger)
         {
-            _session = httpContextAccessor.HttpContext.Session;
             _scopeFactory = scopeFactory;
             _contextAccessor = httpContextAccessor;
-            _meetings = new ConcurrentDictionary<string, IList<MeetingViewModel>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<MeetingViewModel> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _meetings.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<MeetingViewModel>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -49,7 +50,7 @@ namespace KendoCRUDService.Data.Repositories
                         Attendees = meeting.MeetingAttendees.Select(m => m.AttendeeID).ToArray()
                     }).ToList();
                 }
-            });
+            }, Ttl, sliding:true);
         }
 
         public MeetingViewModel One(Func<MeetingViewModel, bool> predicate)
@@ -57,9 +58,25 @@ namespace KendoCRUDService.Data.Repositories
             return All().FirstOrDefault(predicate);
         }
 
+        private void UpdateContent(List<MeetingViewModel> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<MeetingViewModel>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
+        }
+
         public void Insert(MeetingViewModel meeting)
         {
-            var first = All().OrderByDescending(e => e.MeetingID).FirstOrDefault();
+            var entities = All().ToList();
+            var first = entities.OrderByDescending(e => e.MeetingID).FirstOrDefault();
 
             var id = 0;
 
@@ -70,7 +87,8 @@ namespace KendoCRUDService.Data.Repositories
 
             meeting.MeetingID = id + 1;
 
-            All().Insert(0, meeting);
+            entities.Add(meeting);
+            UpdateContent(entities);
         }
 
         public void Update(MeetingViewModel meeting)
@@ -99,14 +117,17 @@ namespace KendoCRUDService.Data.Repositories
             var target = One(p => p.MeetingID == meeting.MeetingID);
             if (target != null)
             {
-                All().Remove(target);
+                var entities = All().ToList();
+                entities.Remove(target);
 
-                var recurrenceExceptions = All().Where(m => m.RecurrenceID == meeting.MeetingID).ToList();
+                var recurrenceExceptions = entities.Where(m => m.RecurrenceID == meeting.MeetingID).ToList();
 
                 foreach (var recurrenceException in recurrenceExceptions)
                 {
-                    All().Remove(recurrenceException);
+                    entities.Remove(recurrenceException);
                 }
+
+                UpdateContent(entities);
             }
         }
     }

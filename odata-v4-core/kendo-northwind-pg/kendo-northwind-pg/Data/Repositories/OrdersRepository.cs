@@ -11,22 +11,28 @@ namespace kendo_northwind_pg.Data.Repositories
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Order>> _orders;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<OrdersRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Orders";
 
 
-        public OrdersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public OrdersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<OrdersRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _orders = new ConcurrentDictionary<string, IList<Order>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Order> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _orders.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Order>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -54,7 +60,22 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            });
+            },Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<Order> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Order>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public Order One(Func<Order, bool> predicate)
@@ -69,7 +90,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(Order Order)
         {
-            var first = All().OrderByDescending(p => p.OrderID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.OrderID).FirstOrDefault();
             if (first != null)
             {
                 Order.OrderID = first.OrderID + 1;
@@ -79,7 +101,8 @@ namespace kendo_northwind_pg.Data.Repositories
                 Order.OrderID = 0;
             }
 
-            All().Insert(0, Order);
+            entries.Insert(0, Order);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<Order> Orders)
@@ -122,7 +145,9 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.OrderID == Order.OrderID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 

@@ -10,22 +10,28 @@ namespace kendo_northwind_pg.Data.Repositories
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Product>> _products;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<ProductRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Products";
 
 
-        public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<ProductRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _products = new ConcurrentDictionary<string, IList<Product>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Product> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _products.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Product>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -47,7 +53,22 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            });
+            }, Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<Product> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Product>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public Product One(Func<Product, bool> predicate)
@@ -62,7 +83,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(Product product)
         {
-            var first = All().OrderByDescending(p => p.ProductID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.ProductID).FirstOrDefault();
             if (first != null)
             {
                 product.ProductID = first.ProductID + 1;
@@ -72,7 +94,8 @@ namespace kendo_northwind_pg.Data.Repositories
                 product.ProductID = 0;
             }
 
-            All().Insert(0, product);
+            entries.Insert(0, product);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<Product> products)
@@ -112,7 +135,9 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.ProductID == product.ProductID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 

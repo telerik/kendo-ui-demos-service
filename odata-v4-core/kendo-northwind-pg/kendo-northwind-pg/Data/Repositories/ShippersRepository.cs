@@ -11,22 +11,28 @@ namespace kendo_northwind_pg.Data.Repositories
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Shipper>> _Shippers;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<ShippersRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Shippers";
 
 
-        public ShippersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public ShippersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<ShippersRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _Shippers = new ConcurrentDictionary<string, IList<Shipper>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Shipper> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _Shippers.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Shipper>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -41,8 +47,24 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            });
+            }, Ttl, sliding:true);
         }
+
+        private void UpdateContent(List<Shipper> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Shipper>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
+        }
+
 
         public Shipper One(Func<Shipper, bool> predicate)
         {
@@ -56,7 +78,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(Shipper Shipper)
         {
-            var first = All().OrderByDescending(p => p.ShipperID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.ShipperID).FirstOrDefault();
             if (first != null)
             {
                 Shipper.ShipperID = first.ShipperID + 1;
@@ -66,7 +89,8 @@ namespace kendo_northwind_pg.Data.Repositories
                 Shipper.ShipperID = 0;
             }
 
-            All().Insert(0, Shipper);
+            entries.Insert(0, Shipper);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<Shipper> Shippers)
@@ -100,7 +124,10 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.ShipperID == Shipper.ShipperID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
+               
             }
         }
 

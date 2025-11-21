@@ -12,29 +12,52 @@ namespace kendo_northwind_pg.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<GanttTask>> _tasks;
         private IHttpContextAccessor _contextAccessor;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<GanttTaskRepository> _logger;
 
-        public GanttTaskRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "GanttTaskRepositories";
+
+        public GanttTaskRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<GanttTaskRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _tasks = new ConcurrentDictionary<string, IList<GanttTask>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<GanttTask> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _tasks.GetOrAdd(userKey, key =>
-            {
-                using (var scope = _scopeFactory.CreateScope())
+            return _userCache.GetOrCreateList<GanttTask>(
+                userKey,
+                LogicalName,
+                () =>
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
-                    return context.GanttTasks.ToList();
-                }
-            });
+                    using (var scope = _scopeFactory.CreateScope())
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+                        return context.GanttTasks.ToList();
+                    }
+                }, Ttl, sliding: true);
+        }
+        private void UpdateContent(List<GanttTask> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<GanttTask>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public void Insert(IEnumerable<GanttTask> tasks)
@@ -47,7 +70,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(GanttTask task)
         {
-             var first = All().OrderByDescending(e => e.Id).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(e => e.Id).FirstOrDefault();
 
              var id = 0;
 
@@ -63,7 +87,8 @@ namespace kendo_northwind_pg.Data.Repositories
                  throw new Exception("Parent task was not created!");
              }
 
-            All().Insert(0, task);
+            entries.Insert(0, task);
+            UpdateContent(entries);
         }
 
         public void Update(IEnumerable<GanttTask> tasks)
@@ -107,10 +132,12 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Delete(GanttTask task)
         {
-            var target = All().FirstOrDefault(p => p.Id == task.Id);
+            var entries = All().ToList();
+            var target = entries.FirstOrDefault(p => p.Id == task.Id);
             if (target != null)
             {
-                All().Remove(target);
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
     }

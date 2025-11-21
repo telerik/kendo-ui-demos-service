@@ -8,19 +8,24 @@ namespace KendoCRUDService.Data.Repositories
 {
     public class TasksRepository
     {
-        private static bool UpdateDatabase = false;
 
-        private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
         private ConcurrentDictionary<string, IList<TaskViewModel>> _tasks;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<TasksRepository> _logger;
 
-        public TasksRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Tasks";
+
+        public TasksRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<TasksRepository> logger)
         {
-            _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
             _tasks = new ConcurrentDictionary<string, IList<TaskViewModel>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<TaskViewModel> All()
@@ -28,7 +33,7 @@ namespace KendoCRUDService.Data.Repositories
 
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _tasks.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<TaskViewModel>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -49,7 +54,22 @@ namespace KendoCRUDService.Data.Repositories
                         OwnerID = task.OwnerID
                     }).ToList();
                 }
-            });
+            },Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<TaskViewModel> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<TaskViewModel>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public TaskViewModel One(Func<TaskViewModel, bool> predicate)
@@ -59,7 +79,8 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(TaskViewModel task)
         {
-            var first = All().OrderByDescending(e => e.TaskID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(e => e.TaskID).FirstOrDefault();
 
             var id = 0;
 
@@ -70,7 +91,8 @@ namespace KendoCRUDService.Data.Repositories
 
             task.TaskID = id + 1;
 
-            All().Insert(0, task);
+            entries.Insert(0, task);
+            UpdateContent(entries);
         }
 
         public void Update(TaskViewModel task)
@@ -98,14 +120,18 @@ namespace KendoCRUDService.Data.Repositories
             var target = One(p => p.TaskID == task.TaskID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
 
-                var recurrenceExceptions = All().Where(m => m.RecurrenceID == task.TaskID).ToList();
+                entries.Remove(target);
+
+                var recurrenceExceptions = entries.Where(m => m.RecurrenceID == task.TaskID).ToList();
 
                 foreach (var recurrenceException in recurrenceExceptions)
                 {
-                    All().Remove(recurrenceException);
+                    entries.Remove(recurrenceException);
                 }
+
+                UpdateContent(entries);
             }
         }
     }

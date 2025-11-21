@@ -11,22 +11,29 @@ namespace kendo_northwind_pg.Data.Repositories
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Region>> _Regions;
+
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<RegionsRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Regions";
 
 
-        public RegionsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public RegionsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<RegionsRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _Regions = new ConcurrentDictionary<string, IList<Region>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Region> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _Regions.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Region>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -40,7 +47,22 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            });
+            }, Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<Region> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Region>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public Region One(Func<Region, bool> predicate)
@@ -55,7 +77,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(Region Region)
         {
-            var first = All().OrderByDescending(p => p.RegionID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.RegionID).FirstOrDefault();
             if (first != null)
             {
                 Region.RegionID = first.RegionID + 1;
@@ -65,7 +88,8 @@ namespace kendo_northwind_pg.Data.Repositories
                 Region.RegionID = 0;
             }
 
-            All().Insert(0, Region);
+            entries.Insert(0, Region);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<Region> Regions)
@@ -98,7 +122,9 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.RegionID == Region.RegionID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 

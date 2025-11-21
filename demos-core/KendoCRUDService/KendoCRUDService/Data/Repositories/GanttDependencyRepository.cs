@@ -1,6 +1,7 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SQLitePCL;
 using System.Collections.Concurrent;
 
@@ -8,18 +9,23 @@ namespace KendoCRUDService.Data.Repositories
 {
     public  class GanttDependencyRepository
     {
-        private bool UpdateDatabase = false;
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<GanttDependency>> _dependencies;
         private IHttpContextAccessor _contextAccessor;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<GanttDependencyRepository> _logger;
 
-        public GanttDependencyRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "GanttDependencies";
+
+        public GanttDependencyRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<GanttDependencyRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _dependencies = new ConcurrentDictionary<string, IList<GanttDependency>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
 
@@ -27,14 +33,14 @@ namespace KendoCRUDService.Data.Repositories
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _dependencies.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<GanttDependency>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
                     return context.GanttDependencies.ToList();
                 }
-            });
+            }, Ttl, sliding: true);
         }
 
         public GanttDependency One(Func<GanttDependency, bool> predicate)
@@ -58,6 +64,20 @@ namespace KendoCRUDService.Data.Repositories
 
             return result;
         }
+        private void UpdateContent(List<GanttDependency> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<GanttDependency>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
+        }
 
         public void Insert(IEnumerable<GanttDependency> dependencies)
         {
@@ -69,7 +89,8 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(GanttDependency dependency)
         {
-            var first = All().OrderByDescending(e => e.ID).FirstOrDefault();
+            var entries = All();
+            var first = entries.OrderByDescending(e => e.ID).FirstOrDefault();
 
             var id = 0;
 
@@ -80,7 +101,8 @@ namespace KendoCRUDService.Data.Repositories
 
             dependency.ID = id + 1;
 
-            All().Insert(0, dependency);
+            entries.Insert(0, dependency);
+            UpdateContent(entries.ToList());
         }
 
         public void Update(IEnumerable<GanttDependency> dependencies)
@@ -116,7 +138,9 @@ namespace KendoCRUDService.Data.Repositories
             var target = One(p => p.ID == dependency.ID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
     }

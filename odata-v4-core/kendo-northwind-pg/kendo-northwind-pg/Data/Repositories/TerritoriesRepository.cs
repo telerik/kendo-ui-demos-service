@@ -1,6 +1,7 @@
 ﻿using kendo_northwind_pg.Data.Models;
 using kendo_northwind_pg.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net;
 
@@ -11,22 +12,28 @@ namespace kendo_northwind_pg.Data.Repositories
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Territory>> _Territorys;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<TerritoriesRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Territories";
 
 
-        public TerritoriesRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public TerritoriesRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<TerritoriesRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _Territorys = new ConcurrentDictionary<string, IList<Territory>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Territory> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _Territorys.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Territory>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -42,7 +49,7 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            });
+            }, Ttl, sliding: true);
         }
 
         public Territory One(Func<Territory, bool> predicate)
@@ -55,6 +62,21 @@ namespace kendo_northwind_pg.Data.Repositories
             return All().Where(predicate);
         }
 
+        private void UpdateContent(List<Territory> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Territory>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
+        }
+
         public static string GenerateRandomID()
         {
             const string chars = "1234567890";
@@ -65,10 +87,12 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(Territory Territory)
         {
-            var first = All().OrderByDescending(p => p.TerritoryID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.TerritoryID).FirstOrDefault();
             Territory.TerritoryID = GenerateRandomID();
 
-            All().Insert(0, Territory);
+            entries.Insert(0, Territory);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<Territory> Territorys)
@@ -101,7 +125,9 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.TerritoryID == Territory.TerritoryID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 

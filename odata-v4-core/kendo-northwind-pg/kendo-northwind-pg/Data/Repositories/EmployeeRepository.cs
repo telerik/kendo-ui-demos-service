@@ -11,22 +11,28 @@ namespace kendo_northwind_pg.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<Employee>> _employeeDirectories;
         private IHttpContextAccessor _contextAccessor;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<EmployeeRepository> _logger;
 
-        public EmployeeRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Employees";
+
+        public EmployeeRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<EmployeeRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _employeeDirectories = new ConcurrentDictionary<string, IList<Employee>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Employee> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _employeeDirectories.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Employee>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -58,7 +64,21 @@ namespace kendo_northwind_pg.Data.Repositories
                         TitleOfCourtesy = x.TitleOfCourtesy
                     }).ToList();
                 }
-            });
+            },Ttl, sliding: true);
+        }
+        private void UpdateContent(List<Employee> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Employee>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public Employee One(Func<Employee, bool> predicate)
@@ -68,7 +88,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(Employee employee)
         {
-            var first = All().OrderByDescending(e => e.EmployeeID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(e => e.EmployeeID).FirstOrDefault();
 
             var id = 0;
 
@@ -79,7 +100,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
             employee.EmployeeID = id + 1;
 
-            All().Insert(0, employee);
+            entries.Insert(0, employee);
+            UpdateContent(entries);
         }
 
         public void Update(Employee employee)
@@ -119,7 +141,8 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.EmployeeID == employee.EmployeeID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
 
                 var employees = All().Where(m => m.ReportsTo == employee.EmployeeID).ToList();
 
@@ -127,6 +150,7 @@ namespace kendo_northwind_pg.Data.Repositories
                 {
                     Delete(subordinate);
                 }
+                UpdateContent(entries);
             }
         }
     }

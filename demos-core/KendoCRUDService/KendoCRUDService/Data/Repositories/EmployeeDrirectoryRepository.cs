@@ -1,7 +1,8 @@
 ﻿using KendoCRUDService.Data.Models;
-using KendoCRUDService.Models;
 using KendoCRUDService.Extensions;
+using KendoCRUDService.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
@@ -10,22 +11,29 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<EmployeeDirectoryModel>> _employeeDirectories;
         private IHttpContextAccessor _contextAccessor;
 
-        public EmployeeDirectoryRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<EmployeeDirectoryRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "EmployeeDirectoryModels";
+
+        public EmployeeDirectoryRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<EmployeeDirectoryRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _employeeDirectories = new ConcurrentDictionary<string, IList<EmployeeDirectoryModel>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<EmployeeDirectoryModel> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _employeeDirectories.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<EmployeeDirectoryModel>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -46,7 +54,7 @@ namespace KendoCRUDService.Data.Repositories
                         Position = employee.Position
                     }).ToList();
                 }
-            });
+            }, Ttl, sliding: true);
         }
 
         public EmployeeDirectoryModel One(Func<EmployeeDirectoryModel, bool> predicate)
@@ -56,7 +64,8 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(EmployeeDirectoryModel employee)
         {
-            var first = All().OrderByDescending(e => e.EmployeeId).FirstOrDefault();
+            var entries = All();
+            var first = entries.OrderByDescending(e => e.EmployeeId).FirstOrDefault();
 
             var id = 0;
 
@@ -67,7 +76,24 @@ namespace KendoCRUDService.Data.Repositories
 
             employee.EmployeeId = id + 1;
 
-            All().Insert(0, employee);
+            entries.Insert(0, employee);
+
+            UpdateContent(entries.ToList());
+        }
+
+        private void UpdateContent(List<EmployeeDirectoryModel> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<EmployeeDirectoryModel>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public void Update(EmployeeDirectoryModel employee)
@@ -95,14 +121,16 @@ namespace KendoCRUDService.Data.Repositories
             var target = One(p => p.EmployeeId == employee.EmployeeId);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
 
-                var employees = All().Where(m => m.ReportsTo == employee.EmployeeId).ToList();
+                var employees = entries.Where(m => m.ReportsTo == employee.EmployeeId).ToList();
 
                 foreach (var subordinate in employees)
                 {
                     Delete(subordinate);
                 }
+                UpdateContent(entries);
             }
         }
     }

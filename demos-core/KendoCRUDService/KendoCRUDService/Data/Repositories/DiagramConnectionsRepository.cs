@@ -1,6 +1,7 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
@@ -10,29 +11,50 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<OrgChartConnection>> _connetctions;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<DiagramConnectionsRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "OrgChartConnections";
         private IHttpContextAccessor _contextAccessor;
 
-        public DiagramConnectionsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public DiagramConnectionsRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<DiagramConnectionsRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _connetctions = new ConcurrentDictionary<string, IList<OrgChartConnection>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<OrgChartConnection> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _connetctions.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<OrgChartConnection>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
                     return context.OrgChartConnections.ToList();
                 }
-            });
+            }, Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<OrgChartConnection> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<OrgChartConnection>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public OrgChartConnection One(Func<OrgChartConnection, bool> predicate)
@@ -50,7 +72,8 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(OrgChartConnection connection)
         {
-            var first = All().OrderByDescending(e => e.Id).FirstOrDefault();
+            var entries = All();
+            var first = entries.OrderByDescending(e => e.Id).FirstOrDefault();
 
             long id = 0;
 
@@ -61,7 +84,8 @@ namespace KendoCRUDService.Data.Repositories
 
             connection.Id = id + 1;
 
-            All().Insert(0, connection);
+            entries.Insert(0, connection);
+            UpdateContent(entries.ToList());
         }
 
         public void Update(IEnumerable<OrgChartConnection> connections)
@@ -101,7 +125,9 @@ namespace KendoCRUDService.Data.Repositories
             var target = One(p => p.Id == connection.Id);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
     }

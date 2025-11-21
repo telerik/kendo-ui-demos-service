@@ -13,22 +13,28 @@ namespace kendo_northwind_pg.Data.Repositories
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Customer>> _Customers;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<CustomersRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Customers";
 
 
-        public CustomersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public CustomersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<CustomersRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _Customers = new ConcurrentDictionary<string, IList<Customer>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Customer> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _Customers.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Customer>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -53,8 +59,23 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            });
+            }, Ttl, sliding: true);
         }
+        private void UpdateContent(List<Customer> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Customer>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
+        }
+
         public static string GenerateRandomCustomerID()
         {
             return Guid.NewGuid().ToString().Substring(0, 5);
@@ -71,10 +92,12 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(Customer Customer)
         {
-            var first = All().OrderByDescending(p => p.CustomerID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.CustomerID).FirstOrDefault();
             Customer.CustomerID = GenerateRandomCustomerID();
 
-            All().Insert(0, Customer);
+            entries.Insert(0, Customer);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<Customer> Customers)
@@ -117,7 +140,9 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.CustomerID == Customer.CustomerID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 

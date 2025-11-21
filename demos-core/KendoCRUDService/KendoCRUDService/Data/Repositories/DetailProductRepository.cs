@@ -1,7 +1,8 @@
 ﻿using KendoCRUDService.Data.Models;
-using KendoCRUDService.Models;
 using KendoCRUDService.Extensions;
+using KendoCRUDService.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace KendoCRUDService.Data.Repositories
@@ -10,22 +11,28 @@ namespace KendoCRUDService.Data.Repositories
     {
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<DetailProduct>> _detailProducts;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<DetailProductRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "DetailProducts";
         private IHttpContextAccessor _contextAccessor;
 
-        public DetailProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public DetailProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<DetailProductRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _detailProducts = new ConcurrentDictionary<string, IList<DetailProduct>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<DetailProduct> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _detailProducts.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<DetailProduct>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -48,7 +55,22 @@ namespace KendoCRUDService.Data.Repositories
                         UnitsOnOrder = p.UnitsOnOrder
                     }).ToList();
                 }
-            });
+            },Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<DetailProduct> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<DetailProduct>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public DetailProduct One(Func<DetailProduct, bool> predicate)
@@ -58,7 +80,8 @@ namespace KendoCRUDService.Data.Repositories
 
         public void Insert(DetailProduct product)
         {
-            var first = All().OrderByDescending(p => p.ProductID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.ProductID).FirstOrDefault();
             if (first != null)
             {
                 product.ProductID = first.ProductID + 1;
@@ -68,7 +91,8 @@ namespace KendoCRUDService.Data.Repositories
                 product.ProductID = 0;
             }
 
-            All().Insert(0, product);
+            entries.Insert(0, product);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<DetailProduct> products)
@@ -114,7 +138,9 @@ namespace KendoCRUDService.Data.Repositories
             var target = One(p => p.ProductID == product.ProductID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 

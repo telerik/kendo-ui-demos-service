@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.RateLimiting;
 
 namespace kendo_northwind_pg.Data.Repositories
 {
@@ -14,15 +15,21 @@ namespace kendo_northwind_pg.Data.Repositories
         private bool UpdateDatabase = false;
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private ConcurrentDictionary<string, IList<GanttDependency>> _dependencies;
         private IHttpContextAccessor _contextAccessor;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<GanttDependencyRepository> _logger;
 
-        public GanttDependencyRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "GanttDependencies";
+
+        public GanttDependencyRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<GanttDependencyRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _dependencies = new ConcurrentDictionary<string, IList<GanttDependency>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
 
@@ -30,14 +37,29 @@ namespace kendo_northwind_pg.Data.Repositories
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _dependencies.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<GanttDependency>(userKey, LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
                     return context.GanttDependencies.ToList();
                 }
-            });
+            },Ttl, sliding: true);
+        }
+
+        private void UpdateContent(List<GanttDependency> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<GanttDependency>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public GanttDependency One(Func<GanttDependency, bool> predicate)
@@ -72,7 +94,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
         public void Insert(GanttDependency dependency)
         {
-            var first = All().OrderByDescending(e => e.Id).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(e => e.Id).FirstOrDefault();
 
             var id = 0;
 
@@ -83,7 +106,8 @@ namespace kendo_northwind_pg.Data.Repositories
 
             dependency.Id = id + 1;
 
-            All().Insert(0, dependency);
+            entries.Insert(0, dependency);
+            UpdateContent(entries);
         }
 
         public void Update(IEnumerable<GanttDependency> dependencies)
@@ -119,7 +143,9 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.Id == dependency.Id);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 

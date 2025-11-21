@@ -1,6 +1,7 @@
 ﻿using kendo_northwind_pg.Data.Models;
 using kendo_northwind_pg.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 using System.Net;
@@ -13,22 +14,28 @@ namespace kendo_northwind_pg.Data.Repositories
         private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
         private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Supplier>> _Suppliers;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<SuppliersRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "Suppliers";
 
 
-        public SuppliersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory)
+        public SuppliersRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, IUserDataCache userCache,
+            ILogger<SuppliersRepository> logger)
         {
             _session = httpContextAccessor.HttpContext.Session;
             _contextAccessor = httpContextAccessor;
             _scopeFactory = scopeFactory;
-            _Suppliers = new ConcurrentDictionary<string, IList<Supplier>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public IList<Supplier> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            return _Suppliers.GetOrAdd(userKey, key =>
+            return _userCache.GetOrCreateList<Supplier>(userKey,LogicalName, () =>
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
@@ -52,7 +59,7 @@ namespace kendo_northwind_pg.Data.Repositories
                     }).ToList();
                 }
 
-            });
+            },Ttl, sliding: true);
         }
 
         public Supplier One(Func<Supplier, bool> predicate)
@@ -65,9 +72,25 @@ namespace kendo_northwind_pg.Data.Repositories
             return All().Where(predicate);
         }
 
+        private void UpdateContent(List<Supplier> entries)
+        {
+            var userKey = SessionUtils.GetUserKey(_contextAccessor);
+            _userCache.GetOrCreateList<Supplier>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
+        }
+
         public void Insert(Supplier Supplier)
         {
-            var first = All().OrderByDescending(p => p.SupplierID).FirstOrDefault();
+            var entries = All().ToList();
+            var first = entries.OrderByDescending(p => p.SupplierID).FirstOrDefault();
             if (first != null)
             {
                 Supplier.SupplierID = first.SupplierID + 1;
@@ -77,7 +100,8 @@ namespace kendo_northwind_pg.Data.Repositories
                 Supplier.SupplierID = 0;
             }
 
-            All().Insert(0, Supplier);
+            entries.Insert(0, Supplier);
+            UpdateContent(entries);
         }
 
         public void Insert(IEnumerable<Supplier> Suppliers)
@@ -120,7 +144,9 @@ namespace kendo_northwind_pg.Data.Repositories
             var target = One(p => p.SupplierID == Supplier.SupplierID);
             if (target != null)
             {
-                All().Remove(target);
+                var entries = All().ToList();
+                entries.Remove(target);
+                UpdateContent(entries);
             }
         }
 
