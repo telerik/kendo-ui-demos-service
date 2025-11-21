@@ -1,5 +1,6 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.Extensions;
+using KendoCRUDService.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using System.Collections.Concurrent;
@@ -18,15 +19,22 @@ namespace KendoCRUDService.Data.Repositories
                 return Path.Combine(hostingEnvironment.ContentRootPath, ContentRootPath);
             }
         }
-        private ConcurrentDictionary<string, List<FileManagerEntry>> _directories;
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly IWebHostEnvironment hostingEnvironment;
 
-        public DirectoryRepository(IWebHostEnvironment _hostingEnvironment, IHttpContextAccessor contextAccessor)
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IUserDataCache _userCache;
+        private readonly ILogger<DirectoryRepository> _logger;
+
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "directories";
+
+        public DirectoryRepository(IWebHostEnvironment _hostingEnvironment, IHttpContextAccessor contextAccessor, IUserDataCache userCache, ILogger<DirectoryRepository> logger)
         {
             hostingEnvironment = _hostingEnvironment;
             _contextAccessor = contextAccessor;
-            _directories = new ConcurrentDictionary<string, List<FileManagerEntry>>();
+            _userCache = userCache;
+            _logger = logger;
         }
 
         public ICollection<FileManagerEntry> GetAll(string path, string filter)
@@ -82,14 +90,18 @@ namespace KendoCRUDService.Data.Repositories
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
 
-            var entries = _directories.GetOrAdd(userKey, key =>
-            {
-                return GetAll(ContentPath, filter).ToList();
-            });
+            var entries = _userCache.GetOrCreateList<FileManagerEntry>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return GetAll(ContentPath, filter).ToList();
+                },
+                Ttl,
+                sliding: true
+            );
 
             var virtualized = entries.Where(d => TargetMatch(path, d.Path)).Select(VirtualizePath);
-
-         
 
             return entries.Where(d => TargetMatch(path, d.Path)).Select(VirtualizePath).ToList();
         }
@@ -422,19 +434,31 @@ namespace KendoCRUDService.Data.Repositories
             return allowedExtensions.Any(e => e.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase));
         }
 
-        private List<FileManagerEntry> Content() 
+        private List<FileManagerEntry> Content()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            List<FileManagerEntry> entries = new List<FileManagerEntry>();
-            _directories.TryGetValue(SessionUtils.GetUserKey(_contextAccessor), out entries);
-
-            return entries;
+            if (_userCache.TryGetList<FileManagerEntry>(userKey, LogicalName, out var list))
+                return list;
+            return _userCache.GetOrCreateList<FileManagerEntry>(
+                userKey,
+                LogicalName,
+                () => new List<FileManagerEntry>(),
+                Ttl,
+                sliding: true).ToList();
         }
-
         private void UpdateContent(List<FileManagerEntry> entries)
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            _directories[userKey] = entries;
+            _userCache.GetOrCreateList<FileManagerEntry>(
+                userKey,
+                LogicalName,
+                () =>
+                {
+                    return entries;
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         protected virtual bool CanAccess(string path)

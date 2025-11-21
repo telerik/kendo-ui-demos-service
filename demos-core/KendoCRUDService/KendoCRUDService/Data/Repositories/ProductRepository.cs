@@ -1,39 +1,40 @@
 ﻿using KendoCRUDService.Data.Models;
 using KendoCRUDService.Extensions;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KendoCRUDService.Data.Repositories
 {
     public class ProductRepository
     {
-        private readonly ISession _session;
         private readonly IServiceScopeFactory _scopeFactory;
-        private IHttpContextAccessor _contextAccessor;
-        private ConcurrentDictionary<string, IList<Product>> _productsByUsers;
+        private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IUserDataCache _userCache;
         private readonly ILogger<ProductRepository> _logger;
 
-        public ProductRepository(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory scopeFactory, ILogger<ProductRepository> logger)
+        private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+        private const string LogicalName = "products";
+
+        public ProductRepository(
+            IHttpContextAccessor httpContextAccessor,
+            IServiceScopeFactory scopeFactory,
+            IUserDataCache userCache,
+            ILogger<ProductRepository> logger)
         {
-            _session = httpContextAccessor.HttpContext.Session;
             _scopeFactory = scopeFactory;
             _contextAccessor = httpContextAccessor;
-            _productsByUsers = new ConcurrentDictionary<string, IList<Product>>();
+            _userCache = userCache;
             _logger = logger;
         }
 
         public IList<Product> All()
         {
             var userKey = SessionUtils.GetUserKey(_contextAccessor);
-            _logger.LogInformation($"Fetching products for user key: {userKey}");
-
-            return _productsByUsers.GetOrAdd(userKey, key =>
-            {
-                using (var scope = _scopeFactory.CreateScope())
+            return _userCache.GetOrCreateList<Product>(
+                userKey,
+                LogicalName,
+                () =>
                 {
+                    using var scope = _scopeFactory.CreateScope();
                     var context = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
                     return context.Products.Select(p => new Product
                     {
@@ -48,8 +49,10 @@ namespace KendoCRUDService.Data.Repositories
                         QuantityPerUnit = p.QuantityPerUnit,
                         Discontinued = p.Discontinued
                     }).ToList();
-                }
-            });
+                },
+                Ttl,
+                sliding: true
+            );
         }
 
         public Product One(Func<Product, bool> predicate)
