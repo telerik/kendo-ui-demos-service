@@ -51,49 +51,60 @@ if (builder.Environment.IsProduction())
     dbPath = tmpDbPath;
 }
 
+// Default allowed domains
+var defaultAllowedDomains = new string[] {
+    "core-bootstrap-sample-app.azurewebsites.net",
+    "core-bootstrap-sample-app-test.azurewebsites.net",
+    "aspnet-core-demos-staging.azurewebsites.net",
+    "aspnet-mvc-demos-staging.azurewebsites.net",
+    "jquery-demos-staging.azurewebsites.net",
+    "aspnet-core-demos-test.azurewebsites.net",
+    "aspnet-mvc-demos-test.azurewebsites.net",
+    "jquery-demos-test.azurewebsites.net",
+    "blazor-repl-server-staging.azurewebsites.net",
+    "wwwsit.telerik.com",
+    "telerik.com",
+    "demos.telerik.com",
+    "127.0.0.1",
+    "dojo.telerik.com",
+    "runner.telerik.io",
+    "stackblitz.com",
+    "codesandbox.io",
+    "sitdemos.telerik.com"
+};
+
+// Merge with additional domains from environment variable
+var additionalDomainsStr = builder.Configuration["CORS_ADDITIONAL_ALLOWED_DOMAINS"] ?? "";
+var additionalDomains = string.IsNullOrWhiteSpace(additionalDomainsStr) 
+    ? Array.Empty<string>() 
+    : additionalDomainsStr.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(d => d.Trim()).ToArray();
+
+var allowedDomains = defaultAllowedDomains.Concat(additionalDomains).ToArray();
+
+var wildcardDomains = new string[] {
+    "stackblitz.io",
+    "telerik.com",
+    "webcontainer.io",
+    "csb.app",
+};
+
 bool IsOriginAllowed(string origin)
 {
     var uri = new Uri(origin);
-    var allowedDomains = new string[] {
-        "core-bootstrap-sample-app.azurewebsites.net",
-        "core-bootstrap-sample-app-test.azurewebsites.net",
-        "aspnet-core-demos-staging.azurewebsites.net",
-        "aspnet-mvc-demos-staging.azurewebsites.net",
-        "jquery-demos-staging.azurewebsites.net",
-        "aspnet-core-demos-test.azurewebsites.net",
-        "aspnet-mvc-demos-test.azurewebsites.net",
-        "jquery-demos-test.azurewebsites.net",
-        "blazor-repl-server-staging.azurewebsites.net",
-        "wwwsit.telerik.com",
-        "telerik.com",
-        "demos.telerik.com",
-        "127.0.0.1",
-        "dojo.telerik.com",
-        "runner.telerik.io",
-        "stackblitz.com",
-        "codesandbox.io",
-        "sitdemos.telerik.com"
-    };
-    var wildcardDomains = new string[] {
-        "stackblitz.io",
-        "telerik.com",
-        "webcontainer.io",
-        "csb.app",
-    };
 
     bool isAllowed = false;
-    foreach (var allowedDomain in wildcardDomains)
+    foreach (var domain in wildcardDomains)
     {
-        if (uri.Host.EndsWith(allowedDomain, StringComparison.OrdinalIgnoreCase))
+        if (uri.Host.EndsWith(domain, StringComparison.OrdinalIgnoreCase))
         {
             isAllowed = true;
             break;
         }
     }
 
-    foreach (var allowedDomain in allowedDomains)
+    foreach (var domain in allowedDomains)
     {
-        if (uri.Host.Equals(allowedDomain, StringComparison.OrdinalIgnoreCase))
+        if (uri.Host.Equals(domain, StringComparison.OrdinalIgnoreCase))
         {
             isAllowed = true;
             break;
