@@ -49,7 +49,7 @@ Both hubs read from the bundled [sample.db](signalr-for-aspnet-core/wwwroot/App_
 
 Create, update, and delete operations broadcast changes but do not persist them to the database or maintain a shared in-memory data store. A subsequent `Read` reloads the database records rather than retaining those changes.
 
-Preloaded meetings use stable GUIDs derived from their database `MeetingID`, so updates and deletions target the same meeting across connected clients. Newly created meetings receive new GUIDs.
+Preloaded meetings receive fresh GUIDs on every `Read`, rather than IDs derived from their database `MeetingID`. Independently loaded copies of the same meeting therefore have different IDs across clients or reloads. Newly created meetings also receive new GUIDs.
 
 ## Publish and deploy
 
