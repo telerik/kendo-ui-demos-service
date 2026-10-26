@@ -25,10 +25,10 @@ public class MeetingHub(SampleEntitiesDataContext context) : Hub
     {
         var createdAt = DateTime.Now;
         var meetings = context.Meetings
-            .ToList() // Execute the query because Linq to SQL doesn't get Guid.NewGuid()
+            .ToList()
             .Select(meeting => new MeetingSignalR
             {
-                ID = Guid.NewGuid(),
+                ID = new Guid(meeting.MeetingID, 0, 0, new byte[8]),
                 Title = meeting.Title,
                 Start = DateTime.SpecifyKind(meeting.Start, DateTimeKind.Utc),
                 End = DateTime.SpecifyKind(meeting.End, DateTimeKind.Utc),
